@@ -18,7 +18,7 @@ class Setting extends Model
     public static function current(): self
     {
         return static::firstOrCreate([], [
-            'restaurant_name' => 'Green Fork Restaurant',
+            'restaurant_name' => 'Javohir Restoran CRM',
             'theme_preference' => 'light',
         ]);
     }

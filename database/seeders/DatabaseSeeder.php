@@ -11,12 +11,6 @@ class DatabaseSeeder extends Seeder
         $this->call([
             SettingSeeder::class,
             AdminUserSeeder::class,
-            CategorySeeder::class,
-            MenuItemSeeder::class,
-            DiningTableSeeder::class,
-            CustomerSeeder::class,
-            StaffSeeder::class,
-            OrderSeeder::class,
         ]);
     }
 }

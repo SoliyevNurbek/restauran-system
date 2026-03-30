@@ -12,7 +12,7 @@ class SettingSeeder extends Seeder
         Setting::updateOrCreate(
             ['id' => 1],
             [
-                'restaurant_name' => 'Green Fork Restaurant',
+                'restaurant_name' => 'Javohir Restoran CRM',
                 'theme_preference' => 'light',
             ]
         );

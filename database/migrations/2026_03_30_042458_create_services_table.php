@@ -8,20 +8,18 @@ return new class extends Migration
 {
     public function up(): void
     {
-        if (Schema::hasTable('dining_tables')) {
-            return;
-        }
-
-        Schema::create('dining_tables', function (Blueprint $table) {
+        Schema::create('services', function (Blueprint $table) {
             $table->id();
-            $table->string('table_number')->unique();
-            $table->enum('status', ['free', 'occupied'])->default('free');
+            $table->string('name');
+            $table->decimal('price', 12, 2)->default(0);
+            $table->string('status')->default('Faol');
+            $table->text('description')->nullable();
             $table->timestamps();
         });
     }
 
     public function down(): void
     {
-        Schema::dropIfExists('dining_tables');
+        Schema::dropIfExists('services');
     }
 };

@@ -8,20 +8,20 @@ return new class extends Migration
 {
     public function up(): void
     {
-        if (Schema::hasTable('customers')) {
+        if (Schema::hasTable('expense_categories')) {
             return;
         }
 
-        Schema::create('customers', function (Blueprint $table) {
+        Schema::create('expense_categories', function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            $table->string('phone')->nullable()->index();
+            $table->text('description')->nullable();
             $table->timestamps();
         });
     }
 
     public function down(): void
     {
-        Schema::dropIfExists('customers');
+        Schema::dropIfExists('expense_categories');
     }
 };

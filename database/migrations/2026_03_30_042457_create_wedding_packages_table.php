@@ -8,21 +8,19 @@ return new class extends Migration
 {
     public function up(): void
     {
-        if (Schema::hasTable('categories')) {
-            return;
-        }
-
-        Schema::create('categories', function (Blueprint $table) {
+        Schema::create('wedding_packages', function (Blueprint $table) {
             $table->id();
-            $table->string('name')->unique();
-            $table->string('slug')->unique();
+            $table->string('name');
+            $table->decimal('price_per_person', 12, 2)->default(0);
             $table->text('description')->nullable();
+            $table->string('status')->default('Faol');
+            $table->string('image')->nullable();
             $table->timestamps();
         });
     }
 
     public function down(): void
     {
-        Schema::dropIfExists('categories');
+        Schema::dropIfExists('wedding_packages');
     }
 };

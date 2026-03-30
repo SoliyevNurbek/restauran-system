@@ -8,22 +8,16 @@ return new class extends Migration
 {
     public function up(): void
     {
-        if (Schema::hasTable('staff')) {
-            return;
-        }
-
-        Schema::create('staff', function (Blueprint $table) {
+        Schema::create('cost_categories', function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            $table->string('email')->nullable()->unique();
-            $table->string('phone')->nullable();
-            $table->enum('role', ['admin', 'waiter', 'cashier'])->default('waiter');
+            $table->string('type');
             $table->timestamps();
         });
     }
 
     public function down(): void
     {
-        Schema::dropIfExists('staff');
+        Schema::dropIfExists('cost_categories');
     }
 };

@@ -2,8 +2,8 @@
 
 namespace Database\Seeders;
 
-use App\Models\Category;
 use App\Models\MenuItem;
+use App\Models\Service;
 use Illuminate\Database\Seeder;
 
 class MenuItemSeeder extends Seeder
@@ -11,29 +11,24 @@ class MenuItemSeeder extends Seeder
     public function run(): void
     {
         $items = [
-            ['name' => 'Green Garden Salad', 'category' => 'Salads', 'price' => 8.50],
-            ['name' => 'Creamy Mushroom Soup', 'category' => 'Starters', 'price' => 7.25],
-            ['name' => 'Grilled Salmon Plate', 'category' => 'Main Course', 'price' => 18.90],
-            ['name' => 'Steak & Herb Butter', 'category' => 'Main Course', 'price' => 22.75],
-            ['name' => 'Chocolate Lava Cake', 'category' => 'Desserts', 'price' => 6.80],
-            ['name' => 'Fresh Mint Lemonade', 'category' => 'Beverages', 'price' => 4.20],
+            ['name' => 'Silver paket', 'price_per_person' => 145000, 'status' => 'Faol', 'description' => 'Asosiy taomlar, salatlar va xizmat ko\'rsatish bilan.'],
+            ['name' => 'Gold paket', 'price_per_person' => 195000, 'status' => 'Faol', 'description' => 'Premium menyu va kengaytirilgan dastur bilan.'],
+            ['name' => 'Platinum paket', 'price_per_person' => 245000, 'status' => 'Faol', 'description' => 'VIP menyu, bezak va sahna xizmatlari bilan.'],
         ];
 
         foreach ($items as $item) {
-            $category = Category::where('name', $item['category'])->first();
-            if (! $category) {
-                continue;
-            }
+            MenuItem::updateOrCreate(['name' => $item['name']], $item);
+        }
 
-            MenuItem::updateOrCreate(
-                ['name' => $item['name']],
-                [
-                    'category_id' => $category->id,
-                    'description' => $item['name'].' prepared by our kitchen.',
-                    'price' => $item['price'],
-                    'status' => 'available',
-                ]
-            );
+        $services = [
+            ['name' => 'DJ va musiqa', 'price' => 3500000, 'status' => 'Faol', 'description' => 'Professional DJ va audio xizmat.'],
+            ['name' => 'Foto va video', 'price' => 4200000, 'status' => 'Faol', 'description' => 'Tadbirni to\'liq suratga olish xizmati.'],
+            ['name' => 'Dekor', 'price' => 5000000, 'status' => 'Faol', 'description' => 'Sahna va stol bezaklari xizmati.'],
+            ['name' => 'Boshlovchi', 'price' => 2800000, 'status' => 'Faol', 'description' => 'Tadbir boshlovchisi xizmati.'],
+        ];
+
+        foreach ($services as $service) {
+            Service::updateOrCreate(['name' => $service['name']], $service);
         }
     }
 }
