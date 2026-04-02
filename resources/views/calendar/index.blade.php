@@ -5,7 +5,7 @@
                 <h2 class="text-lg font-semibold">Yaqinlashayotgan bronlar</h2>
                 <span class="text-xs text-slate-500">Band sanalar va zallar</span>
             </div>
-            <div class="overflow-x-auto">
+            <div class="mobile-fit-table overflow-x-auto">
                 <table class="min-w-full text-sm">
                     <thead class="text-left text-slate-500"><tr><th class="pb-3">Sana</th><th class="pb-3">Vaqt</th><th class="pb-3">Zal</th><th class="pb-3">Mijoz</th><th class="pb-3">Tadbir</th></tr></thead>
                     <tbody>

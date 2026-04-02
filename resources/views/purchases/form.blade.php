@@ -31,7 +31,7 @@
     </div>
 
     <div class="overflow-hidden rounded-3xl border border-slate-200 dark:border-slate-800">
-        <div class="flex items-center justify-between border-b border-slate-200 bg-slate-50 px-4 py-4 dark:border-slate-800 dark:bg-slate-800/60">
+        <div class="flex flex-col gap-3 border-b border-slate-200 bg-slate-50 px-4 py-4 dark:border-slate-800 dark:bg-slate-800/60 sm:flex-row sm:items-center sm:justify-between">
             <div>
                 <h3 class="text-sm font-semibold text-slate-900 dark:text-white">Kirim tarkibi</h3>
                 <p class="text-xs text-slate-500">Mahsulot, miqdor va narxni bir nechta qatorda kiriting</p>
@@ -39,7 +39,45 @@
             <button type="button" @click="addRow()" class="rounded-2xl bg-primary-600 px-4 py-2 text-sm font-semibold text-white hover:bg-primary-700">Qator qo'shish</button>
         </div>
 
-        <div class="overflow-x-auto">
+        <div class="space-y-3 p-4 lg:hidden">
+            <template x-for="(row, index) in rows" :key="index">
+                <div class="rounded-2xl border border-slate-200/80 p-4 dark:border-slate-800">
+                    <div class="grid gap-3">
+                        <div>
+                            <label class="mb-1 block text-xs font-medium text-slate-500">Mahsulot</label>
+                            <select x-model="row.product_id" :name="`items[${index}][product_id]`" @change="applyDefaultPrice(row)" class="w-full rounded-2xl border border-slate-200 px-3 py-2.5 dark:border-slate-700 dark:bg-slate-800">
+                                <option value="">Mahsulot tanlang</option>
+                                <template x-for="product in products" :key="product.id">
+                                    <option :value="product.id" x-text="`${product.name} (${product.unit})`"></option>
+                                </template>
+                            </select>
+                        </div>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="mb-1 block text-xs font-medium text-slate-500">Miqdori</label>
+                                <input type="number" min="0.001" step="0.001" x-model="row.quantity" :name="`items[${index}][quantity]`" class="w-full rounded-2xl border border-slate-200 px-3 py-2.5 dark:border-slate-700 dark:bg-slate-800">
+                            </div>
+                            <div>
+                                <label class="mb-1 block text-xs font-medium text-slate-500">Narxi</label>
+                                <div class="relative">
+                                    <input type="number" min="0" step="0.01" x-model="row.unit_price" :name="`items[${index}][unit_price]`" class="w-full rounded-2xl border border-slate-200 px-3 py-2.5 pr-14 dark:border-slate-700 dark:bg-slate-800">
+                                    <span class="pointer-events-none absolute inset-y-0 right-3 flex items-center text-xs font-medium text-slate-400">so'm</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex items-center justify-between gap-3 rounded-2xl bg-slate-50 px-3 py-2.5 dark:bg-slate-800/70">
+                            <div>
+                                <p class="text-[11px] font-medium uppercase tracking-[0.2em] text-slate-400">Jami</p>
+                                <p class="mt-1 text-sm font-semibold text-slate-900 dark:text-white" x-text="formatMoney((Number(row.quantity || 0) * Number(row.unit_price || 0)))"></p>
+                            </div>
+                            <button type="button" @click="removeRow(index)" class="rounded-xl border border-red-200 px-3 py-2 text-xs font-medium text-red-600 hover:bg-red-50 dark:border-red-900/40 dark:text-red-400">O'chirish</button>
+                        </div>
+                    </div>
+                </div>
+            </template>
+        </div>
+
+        <div class="hidden lg:block">
             <table class="min-w-full text-sm">
                 <thead class="text-left text-slate-500 dark:text-slate-300">
                 <tr>
@@ -54,7 +92,7 @@
                 <template x-for="(row, index) in rows" :key="index">
                     <tr class="border-t border-slate-100 dark:border-slate-800">
                         <td class="px-4 py-3">
-                            <select x-model="row.product_id" :name="`items[${index}][product_id]`" @change="applyDefaultPrice(row)" class="w-full min-w-48 rounded-2xl border border-slate-200 px-3 py-2.5 dark:border-slate-700 dark:bg-slate-800">
+                            <select x-model="row.product_id" :name="`items[${index}][product_id]`" @change="applyDefaultPrice(row)" class="w-full rounded-2xl border border-slate-200 px-3 py-2.5 dark:border-slate-700 dark:bg-slate-800">
                                 <option value="">Mahsulot tanlang</option>
                                 <template x-for="product in products" :key="product.id">
                                     <option :value="product.id" x-text="`${product.name} (${product.unit})`"></option>
@@ -65,7 +103,10 @@
                             <input type="number" min="0.001" step="0.001" x-model="row.quantity" :name="`items[${index}][quantity]`" class="w-full rounded-2xl border border-slate-200 px-3 py-2.5 dark:border-slate-700 dark:bg-slate-800">
                         </td>
                         <td class="px-4 py-3">
-                            <input type="number" min="0" step="0.01" x-model="row.unit_price" :name="`items[${index}][unit_price]`" class="w-full rounded-2xl border border-slate-200 px-3 py-2.5 dark:border-slate-700 dark:bg-slate-800">
+                            <div class="relative">
+                                <input type="number" min="0" step="0.01" x-model="row.unit_price" :name="`items[${index}][unit_price]`" class="w-full rounded-2xl border border-slate-200 px-3 py-2.5 pr-14 dark:border-slate-700 dark:bg-slate-800">
+                                <span class="pointer-events-none absolute inset-y-0 right-3 flex items-center text-xs font-medium text-slate-400">so'm</span>
+                            </div>
                         </td>
                         <td class="px-4 py-3 font-semibold" x-text="formatMoney((Number(row.quantity || 0) * Number(row.unit_price || 0)))"></td>
                         <td class="px-4 py-3">
@@ -109,7 +150,7 @@
                 return this.rows.reduce((carry, row) => carry + (Number(row.quantity || 0) * Number(row.unit_price || 0)), 0);
             },
             formatMoney(value) {
-                return new Intl.NumberFormat('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}).format(value || 0);
+                return `${new Intl.NumberFormat('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}).format(value || 0)} so'm`;
             }
         }
     }

@@ -1,4 +1,8 @@
-<x-layouts.guest title="Kirish | Restoran Boshqaruvi">
+@php
+    $restaurantName = $appSetting->restaurant_name ?? 'Javohir Restoran';
+@endphp
+
+<x-layouts.guest :title="'Kirish | ' . $restaurantName">
     <style>
         .login-page {
             min-height: 100vh;
@@ -103,6 +107,37 @@
             background: #ffffff;
         }
 
+        .login-password-wrap {
+            position: relative;
+        }
+
+        .login-password-wrap .login-input {
+            padding-right: 48px;
+        }
+
+        .login-password-toggle {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px;
+            height: 32px;
+            border: 0;
+            border-radius: 999px;
+            background: transparent;
+            color: #6c7f73;
+            cursor: pointer;
+            transition: background-color .2s ease, color .2s ease;
+        }
+
+        .login-password-toggle:hover {
+            background: rgba(85, 119, 95, 0.08);
+            color: #355943;
+        }
+
         .login-submit {
             width: 100%;
             border: 0;
@@ -166,10 +201,10 @@
             <div class="login-card">
                 <div class="login-header">
                     <div class="login-logo-wrap">
-                        <img src="{{ asset('Javohirlogo.png') }}" alt="Javohir Restoran" class="login-logo">
+                        <img src="{{ asset('Javohirlogo.png') }}" alt="{{ $restaurantName }}" class="login-logo">
                     </div>
 
-                    <h1 class="login-title">Javohir Restoran Boshqaruv Paneli</h1>
+                    <h1 class="login-title">{{ $restaurantName }} Boshqaruv Paneli</h1>
                     <p class="login-subtitle">Jarayonlarni nazorat qiling</p>
                 </div>
 
@@ -192,14 +227,20 @@
 
                     <div class="login-field">
                         <label for="password">Parol</label>
-                        <input
-                            id="password"
-                            name="password"
-                            type="password"
-                            required
-                            placeholder="Parol"
-                            class="login-input"
-                        >
+                        <div class="login-password-wrap">
+                            <input
+                                id="password"
+                                name="password"
+                                type="password"
+                                required
+                                placeholder="Parol"
+                                class="login-input"
+                            >
+                            <button type="button" id="passwordToggle" class="login-password-toggle" aria-label="Parolni ko'rsatish">
+                                <i data-lucide="eye" id="passwordToggleShow" class="h-4 w-4"></i>
+                                <i data-lucide="eye-off" id="passwordToggleHide" class="hidden h-4 w-4"></i>
+                            </button>
+                        </div>
                         @error('password')<p class="login-error">{{ $message }}</p>@enderror
                     </div>
 
@@ -208,9 +249,28 @@
                     </button>
                 </form>
 
-                <div class="login-footer">2026 Javohir Restoran | Barcha huquqlar himoyalangan</div>
+                <div class="login-footer">2026 {{ $restaurantName }} | Barcha huquqlar himoyalangan</div>
             </div>
         </div>
     </div>
+    <script>
+        (() => {
+            const passwordInput = document.getElementById('password');
+            const passwordToggle = document.getElementById('passwordToggle');
+            const passwordToggleShow = document.getElementById('passwordToggleShow');
+            const passwordToggleHide = document.getElementById('passwordToggleHide');
+
+            if (!passwordInput || !passwordToggle || !passwordToggleShow || !passwordToggleHide) return;
+
+            passwordToggle.addEventListener('click', () => {
+                const isPassword = passwordInput.type === 'password';
+
+                passwordInput.type = isPassword ? 'text' : 'password';
+                passwordToggle.setAttribute('aria-label', isPassword ? 'Parolni yashirish' : 'Parolni ko\'rsatish');
+                passwordToggleShow.classList.toggle('hidden', isPassword);
+                passwordToggleHide.classList.toggle('hidden', !isPassword);
+            });
+        })();
+    </script>
 </x-layouts.guest>
 

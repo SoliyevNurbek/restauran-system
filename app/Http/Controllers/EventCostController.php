@@ -73,7 +73,13 @@ class EventCostController extends Controller
             'utility_cost' => ['nullable', 'numeric', 'min:0'],
             'tax_share' => ['nullable', 'numeric', 'min:0'],
         ]);
+
+        $data['salary_cost'] = (float) ($data['salary_cost'] ?? 0);
+        $data['utility_cost'] = (float) ($data['utility_cost'] ?? 0);
+        $data['tax_share'] = (float) ($data['tax_share'] ?? 0);
+
         $data['total_price'] = (float) $data['quantity'] * (float) $data['unit_price'];
+
         return $data;
     }
 }

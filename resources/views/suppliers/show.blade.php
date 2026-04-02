@@ -8,22 +8,22 @@
                 </div>
                 <div class="rounded-2xl bg-amber-50 px-4 py-3 text-right dark:bg-amber-950/30">
                     <p class="text-xs uppercase tracking-[0.2em] text-amber-600 dark:text-amber-300">Joriy balans</p>
-                    <p class="mt-1 text-2xl font-semibold text-amber-700 dark:text-amber-200">{{ number_format($supplier->balance, 2) }}</p>
+                    <x-money :value="$supplier->balance" class="mt-1 text-2xl font-semibold text-amber-700 dark:text-amber-200" suffixClass="text-sm font-medium text-amber-500 dark:text-amber-300" />
                 </div>
             </div>
 
             <div class="mt-6 grid gap-4 md:grid-cols-3">
                 <div class="rounded-2xl border border-slate-100 p-4 dark:border-slate-800">
                     <p class="text-xs text-slate-500">Boshlang'ich balans</p>
-                    <p class="mt-2 text-lg font-semibold">{{ number_format($supplier->opening_balance, 2) }}</p>
+                    <x-money :value="$supplier->opening_balance" class="mt-2 text-lg font-semibold" />
                 </div>
                 <div class="rounded-2xl border border-slate-100 p-4 dark:border-slate-800">
                     <p class="text-xs text-slate-500">Jami kirim</p>
-                    <p class="mt-2 text-lg font-semibold">{{ number_format($supplier->purchases_sum_total_amount ?? 0, 2) }}</p>
+                    <x-money :value="$supplier->purchases_sum_total_amount ?? 0" class="mt-2 text-lg font-semibold" />
                 </div>
                 <div class="rounded-2xl border border-slate-100 p-4 dark:border-slate-800">
                     <p class="text-xs text-slate-500">Jami to'lov</p>
-                    <p class="mt-2 text-lg font-semibold">{{ number_format($supplier->payments_sum_amount ?? 0, 2) }}</p>
+                    <x-money :value="$supplier->payments_sum_amount ?? 0" class="mt-2 text-lg font-semibold" />
                 </div>
             </div>
 
@@ -35,7 +35,7 @@
                             <div class="rounded-2xl border border-slate-100 px-4 py-3 dark:border-slate-800">
                                 <div class="flex items-center justify-between gap-3">
                                     <span class="text-sm font-medium">{{ optional($purchase->purchase_date)->format('d.m.Y') }}</span>
-                                    <span class="text-sm font-semibold">{{ number_format($purchase->total_amount, 2) }}</span>
+                                    <x-money :value="$purchase->total_amount" class="text-sm font-semibold" />
                                 </div>
                                 <p class="mt-1 text-xs text-slate-500">{{ $purchase->notes ?: 'Izoh yo\'q' }}</p>
                             </div>
@@ -52,7 +52,7 @@
                             <div class="rounded-2xl border border-slate-100 px-4 py-3 dark:border-slate-800">
                                 <div class="flex items-center justify-between gap-3">
                                     <span class="text-sm font-medium">{{ optional($payment->payment_date)->format('d.m.Y') }}</span>
-                                    <span class="text-sm font-semibold text-emerald-600 dark:text-emerald-300">{{ number_format($payment->amount, 2) }}</span>
+                                    <x-money :value="$payment->amount" class="text-sm font-semibold text-emerald-600 dark:text-emerald-300" suffixClass="text-xs font-medium text-emerald-500 dark:text-emerald-300" />
                                 </div>
                                 <p class="mt-1 text-xs text-slate-500">{{ $payment->notes ?: 'Izoh yo\'q' }}</p>
                             </div>
@@ -76,7 +76,10 @@
                 </div>
                 <div>
                     <label class="mb-1 block text-sm font-medium">Summa</label>
-                    <input type="number" name="amount" step="0.01" min="0.01" value="{{ old('amount') }}" required class="w-full rounded-2xl border border-slate-200 px-4 py-2.5 dark:border-slate-700 dark:bg-slate-800">
+                    <div class="relative">
+                        <input type="number" name="amount" step="0.01" min="0.01" value="{{ old('amount') }}" required class="w-full rounded-2xl border border-slate-200 px-4 py-2.5 pr-16 dark:border-slate-700 dark:bg-slate-800">
+                        <span class="pointer-events-none absolute inset-y-0 right-4 flex items-center text-sm font-medium text-slate-400">so'm</span>
+                    </div>
                 </div>
                 <div>
                     <label class="mb-1 block text-sm font-medium">Izoh</label>

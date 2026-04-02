@@ -10,6 +10,12 @@ class WeddingPackage extends Model
 {
     use HasFactory;
 
+    public const NAME_OPTIONS = [
+        'Standart',
+        'Premium',
+        'Vip',
+    ];
+
     protected $fillable = [
         'name',
         'price_per_person',
@@ -28,5 +34,10 @@ class WeddingPackage extends Model
     public function bookings(): HasMany
     {
         return $this->hasMany(Booking::class, 'package_id');
+    }
+
+    public function images(): HasMany
+    {
+        return $this->hasMany(WeddingPackageImage::class)->orderBy('sort_order')->orderBy('id');
     }
 }

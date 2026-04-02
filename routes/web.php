@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BookingController;
+use App\Http\Controllers\BookingUsageItemController;
 use App\Http\Controllers\CalendarController;
 use App\Http\Controllers\ClientController;
 use App\Http\Controllers\CostCategoryController;
@@ -27,17 +28,19 @@ Route::redirect('/', '/dashboard');
 
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
-    Route::post('/login', [AuthController::class, 'login'])->name('login.store');
+    Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:20,1')->name('login.store');
 });
 
 Route::middleware('auth')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/dashboard/low-stock-word', [DashboardController::class, 'exportLowStockWord'])->middleware('throttle:6,1')->name('dashboard.low-stock-word');
 
     Route::post('/suppliers/{supplier}/payments', [SupplierController::class, 'storePayment'])->name('suppliers.payments.store');
 
     Route::resources([
         'suppliers' => SupplierController::class,
         'products' => ProductController::class,
+        'booking-usage-items' => BookingUsageItemController::class,
         'purchases' => PurchaseController::class,
         'inventory-expenses' => ExpenseController::class,
         'inventory-expense-categories' => ExpenseCategoryController::class,
@@ -61,7 +64,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/calendar', [CalendarController::class, 'index'])->name('calendar.index');
 
     Route::get('/settings', [SettingController::class, 'edit'])->name('settings.edit');
-    Route::put('/settings', [SettingController::class, 'update'])->name('settings.update');
+    Route::put('/settings', [SettingController::class, 'update'])->middleware('throttle:20,1')->name('settings.update');
+    Route::put('/settings/password', [SettingController::class, 'updatePassword'])->middleware('throttle:10,1')->name('settings.password.update');
 
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 });

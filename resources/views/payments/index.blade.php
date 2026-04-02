@@ -4,7 +4,7 @@
         <a href="{{ route('payments.create') }}" class="rounded-xl bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-700">To'lov qo'shish</a>
     </div>
 
-    <div class="overflow-x-auto rounded-2xl bg-white shadow-soft dark:bg-slate-900">
+    <div class="mobile-fit-table overflow-x-auto rounded-2xl bg-white shadow-soft dark:bg-slate-900">
         <table class="min-w-full text-sm">
             <thead class="bg-slate-50 text-left dark:bg-slate-800/70">
             <tr>
@@ -24,7 +24,7 @@
                     <td class="px-4 py-3">{{ $payment->payment_date?->format('d.m.Y') }}</td>
                     <td class="px-4 py-3">{{ $payment->payment_method }}</td>
                     <td class="px-4 py-3">{{ number_format($payment->amount, 0, '.', ' ') }} so'm</td>
-                    <td class="px-4 py-3"><div class="flex justify-end gap-2"><a href="{{ route('payments.edit', $payment) }}" class="rounded-lg border border-slate-200 px-3 py-1.5 text-xs hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-800">Tahrirlash</a><form action="{{ route('payments.destroy', $payment) }}" method="POST">@csrf @method('DELETE')<x-delete-button /></form></div></td>
+                    <td class="px-4 py-3"><div class="responsive-actions flex justify-end gap-2"><x-action-link href="{{ route('payments.edit', $payment) }}" icon="pencil-line" variant="edit">Tahrirlash</x-action-link><form action="{{ route('payments.destroy', $payment) }}" method="POST">@csrf @method('DELETE')<x-delete-button /></form></div></td>
                 </tr>
             @empty
                 <tr><td colspan="6" class="px-4 py-6 text-center text-slate-500">To'lovlar topilmadi.</td></tr>

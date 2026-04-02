@@ -11,7 +11,10 @@ class Setting extends Model
 
     protected $fillable = [
         'restaurant_name',
+        'contact_phone',
+        'notification_email',
         'logo_path',
+        'favicon_path',
         'theme_preference',
     ];
 
@@ -19,6 +22,8 @@ class Setting extends Model
     {
         return static::firstOrCreate([], [
             'restaurant_name' => 'Javohir Restoran CRM',
+            'contact_phone' => null,
+            'notification_email' => null,
             'theme_preference' => 'light',
         ]);
     }

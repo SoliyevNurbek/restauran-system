@@ -39,8 +39,8 @@
                             @endif
                         </td>
                         <td class="px-5 py-4">
-                            <div class="flex flex-wrap gap-2">
-                                <a href="{{ route('products.edit', $product) }}" class="rounded-xl bg-slate-900 px-3 py-1.5 text-xs font-medium text-white dark:bg-slate-100 dark:text-slate-900">Tahrirlash</a>
+                            <div class="responsive-actions flex flex-wrap gap-2">
+                                <x-action-link href="{{ route('products.edit', $product) }}" icon="pencil-line" variant="edit">Tahrirlash</x-action-link>
                                 <form method="POST" action="{{ route('products.destroy', $product) }}">
                                     @csrf
                                     @method('DELETE')

@@ -13,6 +13,8 @@ class SettingSeeder extends Seeder
             ['id' => 1],
             [
                 'restaurant_name' => 'Javohir Restoran CRM',
+                'contact_phone' => null,
+                'notification_email' => null,
                 'theme_preference' => 'light',
             ]
         );

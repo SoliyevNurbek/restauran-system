@@ -10,7 +10,7 @@
             <p class="text-2xl font-bold">{{ $bookings->total() }}</p>
         </div>
 
-        <div class="overflow-x-auto rounded-2xl bg-white p-6 shadow-soft dark:bg-slate-900 lg:col-span-2">
+        <div class="mobile-fit-table overflow-x-auto rounded-2xl bg-white p-6 shadow-soft dark:bg-slate-900 lg:col-span-2">
             <h3 class="mb-4 text-sm font-semibold">Bronlar tarixi</h3>
             <table class="min-w-full text-sm">
                 <thead class="text-left text-slate-500">

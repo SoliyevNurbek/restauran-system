@@ -2,11 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\Payments\StorePaymentRequest;
 use App\Models\Booking;
 use App\Models\Payment;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\View\View;
 
 class PaymentController extends Controller
@@ -26,14 +27,21 @@ class PaymentController extends Controller
         ]);
     }
 
-    public function store(Request $request): RedirectResponse
+    public function store(StorePaymentRequest $request): RedirectResponse
     {
-        $data = $this->validateData($request);
+        $data = $request->validated();
 
         DB::transaction(function () use ($data) {
             $payment = Payment::create($data);
             $this->syncBookingAmounts($payment->booking);
         });
+
+        Log::channel('audit')->info('Payment created.', [
+            'user_id' => $request->user()?->getKey(),
+            'booking_id' => $data['booking_id'],
+            'amount' => $data['amount'],
+            'ip' => $request->ip(),
+        ]);
 
         return redirect()->route('payments.index')->with('success', 'To\'lov qo\'shildi.');
     }
@@ -52,9 +60,9 @@ class PaymentController extends Controller
         ]);
     }
 
-    public function update(Request $request, Payment $payment): RedirectResponse
+    public function update(StorePaymentRequest $request, Payment $payment): RedirectResponse
     {
-        $data = $this->validateData($request);
+        $data = $request->validated();
 
         DB::transaction(function () use ($payment, $data) {
             $oldBooking = $payment->booking;
@@ -65,11 +73,23 @@ class PaymentController extends Controller
             }
         });
 
+        Log::channel('audit')->warning('Payment updated.', [
+            'user_id' => $request->user()?->getKey(),
+            'payment_id' => $payment->getKey(),
+            'booking_id' => $data['booking_id'],
+            'amount' => $data['amount'],
+            'ip' => $request->ip(),
+        ]);
+
         return redirect()->route('payments.index')->with('success', 'To\'lov yangilandi.');
     }
 
-    public function destroy(Payment $payment): RedirectResponse
+    public function destroy(\Illuminate\Http\Request $request, Payment $payment): RedirectResponse
     {
+        $paymentId = $payment->getKey();
+        $bookingId = $payment->booking_id;
+        $amount = $payment->amount;
+
         DB::transaction(function () use ($payment) {
             $booking = $payment->booking;
             $payment->delete();
@@ -78,18 +98,15 @@ class PaymentController extends Controller
             }
         });
 
-        return redirect()->route('payments.index')->with('success', 'To\'lov o\'chirildi.');
-    }
-
-    private function validateData(Request $request): array
-    {
-        return $request->validate([
-            'booking_id' => ['required', 'exists:bookings,id'],
-            'amount' => ['required', 'numeric', 'min:0.01'],
-            'payment_method' => ['required', 'in:'.implode(',', $this->methods())],
-            'payment_date' => ['required', 'date'],
-            'note' => ['nullable', 'string', 'max:1000'],
+        Log::channel('audit')->warning('Payment deleted.', [
+            'user_id' => $request->user()?->getKey(),
+            'payment_id' => $paymentId,
+            'booking_id' => $bookingId,
+            'amount' => $amount,
+            'ip' => $request->ip(),
         ]);
+
+        return redirect()->route('payments.index')->with('success', 'To\'lov o\'chirildi.');
     }
 
     private function syncBookingAmounts(?Booking $booking): void

@@ -11,9 +11,9 @@ class MenuItemSeeder extends Seeder
     public function run(): void
     {
         $items = [
-            ['name' => 'Silver paket', 'price_per_person' => 145000, 'status' => 'Faol', 'description' => 'Asosiy taomlar, salatlar va xizmat ko\'rsatish bilan.'],
-            ['name' => 'Gold paket', 'price_per_person' => 195000, 'status' => 'Faol', 'description' => 'Premium menyu va kengaytirilgan dastur bilan.'],
-            ['name' => 'Platinum paket', 'price_per_person' => 245000, 'status' => 'Faol', 'description' => 'VIP menyu, bezak va sahna xizmatlari bilan.'],
+            ['name' => 'Standart', 'price_per_person' => 145000, 'status' => 'Faol', 'description' => 'Asosiy taomlar, salatlar va xizmat ko\'rsatish bilan.'],
+            ['name' => 'Premium', 'price_per_person' => 195000, 'status' => 'Faol', 'description' => 'Premium menyu va kengaytirilgan dastur bilan.'],
+            ['name' => 'Vip', 'price_per_person' => 245000, 'status' => 'Faol', 'description' => 'VIP menyu, bezak va sahna xizmatlari bilan.'],
         ];
 
         foreach ($items as $item) {

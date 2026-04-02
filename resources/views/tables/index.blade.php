@@ -14,10 +14,10 @@
                     <h3 class="text-lg font-semibold">{{ $hall->name }}</h3>
                     <x-status-badge :status="$hall->status" />
                 </div>
-                <p class="mt-2 text-sm text-slate-500">{{ $hall->capacity }} mehmon • {{ number_format($hall->price, 0, '.', ' ') }} so'm</p>
+                <p class="mt-2 text-sm text-slate-500">{{ $hall->capacity }} mehmon  -  {{ number_format($hall->price, 0, '.', ' ') }} so'm</p>
                 <p class="mt-1 text-xs text-slate-400">{{ \Illuminate\Support\Str::limit($hall->description, 70) }}</p>
-                <div class="mt-4 flex gap-2">
-                    <a href="{{ route('halls.edit', $hall) }}" class="rounded-lg border border-slate-200 px-3 py-1.5 text-xs hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-800">Tahrirlash</a>
+                <div class="responsive-actions mt-4 flex gap-2">
+                    <x-action-link href="{{ route('halls.edit', $hall) }}" icon="pencil-line" variant="edit">Tahrirlash</x-action-link>
                     <form action="{{ route('halls.destroy', $hall) }}" method="POST">@csrf @method('DELETE')<x-delete-button /></form>
                 </div>
             </div>

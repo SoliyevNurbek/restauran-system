@@ -35,17 +35,16 @@
 </div>
 <div>
     <label class="mb-1 block text-sm font-medium">Oylik ulushi</label>
-    <input name="salary_cost" type="number" step="0.01" min="0" value="{{ old('salary_cost', $cost?->salary_cost) }}" class="w-full rounded-xl border border-slate-200 px-4 py-2.5 dark:border-slate-700 dark:bg-slate-800">
+    <input name="salary_cost" type="number" step="0.01" min="0" value="{{ old('salary_cost', $cost?->salary_cost ?? 0) }}" class="w-full rounded-xl border border-slate-200 px-4 py-2.5 dark:border-slate-700 dark:bg-slate-800">
     @error('salary_cost')<p class="mt-1 text-xs text-red-600">{{ $message }}</p>@enderror
 </div>
 <div>
     <label class="mb-1 block text-sm font-medium">Kommunal ulush</label>
-    <input name="utility_cost" type="number" step="0.01" min="0" value="{{ old('utility_cost', $cost?->utility_cost) }}" class="w-full rounded-xl border border-slate-200 px-4 py-2.5 dark:border-slate-700 dark:bg-slate-800">
+    <input name="utility_cost" type="number" step="0.01" min="0" value="{{ old('utility_cost', $cost?->utility_cost ?? 0) }}" class="w-full rounded-xl border border-slate-200 px-4 py-2.5 dark:border-slate-700 dark:bg-slate-800">
     @error('utility_cost')<p class="mt-1 text-xs text-red-600">{{ $message }}</p>@enderror
 </div>
 <div>
     <label class="mb-1 block text-sm font-medium">Soliq ulushi</label>
-    <input name="tax_share" type="number" step="0.01" min="0" value="{{ old('tax_share', $cost?->tax_share) }}" class="w-full rounded-xl border border-slate-200 px-4 py-2.5 dark:border-slate-700 dark:bg-slate-800">
+    <input name="tax_share" type="number" step="0.01" min="0" value="{{ old('tax_share', $cost?->tax_share ?? 0) }}" class="w-full rounded-xl border border-slate-200 px-4 py-2.5 dark:border-slate-700 dark:bg-slate-800">
     @error('tax_share')<p class="mt-1 text-xs text-red-600">{{ $message }}</p>@enderror
 </div>
-

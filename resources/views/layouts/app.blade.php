@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{{ $title ?? 'Restoran CRM' }}</title>
+    <link rel="icon" type="image/png" href="{{ !empty($appSetting?->favicon_path) ? asset('storage/'.$appSetting->favicon_path) : (!empty($appSetting?->logo_path) ? asset('storage/'.$appSetting->logo_path) : asset('Javohirlogo.png')) }}">
+    <link rel="shortcut icon" href="{{ !empty($appSetting?->favicon_path) ? asset('storage/'.$appSetting->favicon_path) : (!empty($appSetting?->logo_path) ? asset('storage/'.$appSetting->logo_path) : asset('Javohirlogo.png')) }}">
     <script>
         (() => {
             const theme = localStorage.getItem('theme') || '{{ $appSetting->theme_preference ?? 'light' }}';
@@ -47,7 +49,62 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <style>[x-cloak]{display:none!important;}</style>
+    <style>
+        [x-cloak]{display:none!important;}
+
+        html,
+        body {
+            overflow-x: hidden;
+        }
+
+        @media (max-width: 1024px) {
+            main,
+            main > *,
+            main section,
+            main article,
+            main aside,
+            main form,
+            main div {
+                min-width: 0;
+                max-width: 100%;
+            }
+
+            main img,
+            main svg,
+            main canvas,
+            main video,
+            main iframe {
+                max-width: 100%;
+                height: auto;
+            }
+
+            main .overflow-x-auto {
+                overflow-x: clip;
+            }
+
+            main table {
+                width: 100%;
+                table-layout: fixed;
+            }
+
+            main th,
+            main td {
+                white-space: normal !important;
+                word-break: break-word;
+                overflow-wrap: anywhere;
+            }
+
+            main .whitespace-nowrap {
+                white-space: normal !important;
+            }
+
+            main td > .flex,
+            main th > .flex,
+            main .inline-flex {
+                flex-wrap: wrap;
+            }
+        }
+    </style>
 </head>
 <body class="h-full bg-slate-100 text-slate-700 dark:bg-slate-950 dark:text-slate-100">
 @php
@@ -86,10 +143,28 @@
     ];
 @endphp
 
-<div class="min-h-full" x-data="{sidebarOpen:false, groups:{inventory: {{ request()->routeIs('suppliers.*') || request()->routeIs('products.*') || request()->routeIs('purchases.*') ? 'true' : 'false' }}, expenses: {{ request()->routeIs('expenses.*') || request()->routeIs('expense-categories.*') ? 'true' : 'false' }}, analysis: {{ request()->routeIs('reports.*') || request()->routeIs('settings.*') ? 'true' : 'false' }}}}">
+<div class="min-h-full" x-data="{
+    sidebarOpen:false,
+    activeGroup:
+        {{ request()->routeIs('suppliers.*') || request()->routeIs('products.*') || request()->routeIs('purchases.*') ? '\'inventory\'' : (request()->routeIs('expenses.*') || request()->routeIs('expense-categories.*') ? '\'expenses\'' : (request()->routeIs('reports.*') || request()->routeIs('settings.*') ? '\'analysis\'' : 'null')) }},
+    scrollToActiveGroup() {
+        if (!this.activeGroup) return;
+        this.$nextTick(() => this.$refs[`group-${this.activeGroup}`]?.scrollIntoView({ block: 'nearest', behavior: 'smooth' }));
+    },
+    toggleGroup(key) {
+        this.activeGroup = this.activeGroup === key ? null : key;
+        this.scrollToActiveGroup();
+    }
+}" x-init="scrollToActiveGroup()">
     <div x-cloak x-show="sidebarOpen" class="fixed inset-0 z-40 bg-slate-950/45 lg:hidden" @click="sidebarOpen = false"></div>
 
     <aside class="fixed inset-y-0 left-0 z-50 flex w-80 flex-col bg-white/95 shadow-soft backdrop-blur transition duration-300 dark:bg-slate-900/95"
+           x-transition:enter="transition ease-out duration-300"
+           x-transition:enter-start="-translate-x-full opacity-80"
+           x-transition:enter-end="translate-x-0 opacity-100"
+           x-transition:leave="transition ease-in duration-200"
+           x-transition:leave-start="translate-x-0 opacity-100"
+           x-transition:leave-end="-translate-x-full opacity-80"
            :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'">
         <div class="border-b border-slate-200 px-5 py-5 dark:border-slate-800">
             <div class="flex items-center gap-3 rounded-3xl bg-primary-600 px-4 py-4 text-white">
@@ -110,24 +185,36 @@
         <div class="flex-1 overflow-y-auto px-4 py-4">
             <nav class="space-y-5">
                 @foreach($navGroups as $group)
-                    <div class="space-y-2">
+                    <div class="space-y-2" @if(!empty($group['key'])) x-ref="group-{{ $group['key'] }}" @endif>
                         <p class="px-3 text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">{{ $group['label'] }}</p>
                         @if(!empty($group['key']))
                             <button type="button"
                                     class="flex w-full items-center justify-between rounded-2xl px-3 py-2.5 text-left text-sm font-medium text-slate-700 transition hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800"
-                                    @click="groups['{{ $group['key'] }}'] = !groups['{{ $group['key'] }}']">
+                                    @click="toggleGroup('{{ $group['key'] }}')">
                                 <span class="flex items-center gap-3">
                                     <i data-lucide="chevrons-up-down" class="h-4 w-4 text-slate-400"></i>
                                     {{ $group['label'] }}
                                 </span>
-                                <i data-lucide="chevron-down" class="h-4 w-4 transition" :class="groups['{{ $group['key'] }}'] ? 'rotate-180' : ''"></i>
+                                <i data-lucide="chevron-down" class="h-4 w-4 transition" :class="activeGroup === '{{ $group['key'] }}' ? 'rotate-180' : ''"></i>
                             </button>
 
-                            <div x-show="groups['{{ $group['key'] }}']" x-cloak class="space-y-1 pl-2">
+                            <div
+                                x-show="activeGroup === '{{ $group['key'] }}'"
+                                x-cloak
+                                x-transition:enter="transition ease-out duration-200"
+                                x-transition:enter-start="opacity-0 -translate-y-1"
+                                x-transition:enter-end="opacity-100 translate-y-0"
+                                x-transition:leave="transition ease-in duration-150"
+                                x-transition:leave-start="opacity-100 translate-y-0"
+                                x-transition:leave-end="opacity-0 -translate-y-1"
+                                class="space-y-1 overflow-hidden pl-2"
+                            >
                                 @foreach($group['items'] as $item)
                                     <a href="{{ route($item['route']) }}"
-                                       class="flex items-center gap-3 rounded-2xl px-3 py-2.5 text-sm font-medium transition {{ request()->routeIs(str_replace('.index', '.*', $item['route'])) || request()->routeIs($item['route']) ? 'bg-primary-600 text-white shadow-soft' : 'text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800' }}">
-                                        <i data-lucide="{{ $item['icon'] }}" class="h-4 w-4"></i>
+                                       @click="if (window.innerWidth < 1024) sidebarOpen = false"
+                                       class="group relative flex items-center gap-3 overflow-hidden rounded-2xl px-3 py-2.5 text-sm font-medium transition-all duration-200 {{ request()->routeIs(str_replace('.index', '.*', $item['route'])) || request()->routeIs($item['route']) ? 'bg-primary-600 text-white shadow-soft ring-1 ring-primary-500/30' : 'text-slate-600 hover:bg-slate-100 hover:shadow-sm dark:text-slate-300 dark:hover:bg-slate-800' }}">
+                                        <span class="absolute inset-y-2 left-1 w-1 rounded-full {{ request()->routeIs(str_replace('.index', '.*', $item['route'])) || request()->routeIs($item['route']) ? 'bg-white/90' : 'bg-transparent group-hover:bg-primary-200 dark:group-hover:bg-primary-800' }}"></span>
+                                        <i data-lucide="{{ $item['icon'] }}" class="h-4 w-4 transition-all duration-200 group-hover:scale-105 {{ request()->routeIs(str_replace('.index', '.*', $item['route'])) || request()->routeIs($item['route']) ? 'text-white' : 'group-hover:text-primary-700 dark:group-hover:text-primary-300' }}"></i>
                                         {{ $item['label'] }}
                                     </a>
                                 @endforeach
@@ -135,8 +222,10 @@
                         @else
                             @foreach($group['items'] as $item)
                                 <a href="{{ route($item['route']) }}"
-                                   class="flex items-center gap-3 rounded-2xl px-3 py-2.5 text-sm font-medium transition {{ request()->routeIs(str_replace('.index', '.*', $item['route'])) || request()->routeIs($item['route']) ? 'bg-primary-600 text-white shadow-soft' : 'text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800' }}">
-                                    <i data-lucide="{{ $item['icon'] }}" class="h-4 w-4"></i>
+                                   @click="if (window.innerWidth < 1024) sidebarOpen = false"
+                                   class="group relative flex items-center gap-3 overflow-hidden rounded-2xl px-3 py-2.5 text-sm font-medium transition-all duration-200 {{ request()->routeIs(str_replace('.index', '.*', $item['route'])) || request()->routeIs($item['route']) ? 'bg-primary-600 text-white shadow-soft ring-1 ring-primary-500/30' : 'text-slate-600 hover:bg-slate-100 hover:shadow-sm dark:text-slate-300 dark:hover:bg-slate-800' }}">
+                                    <span class="absolute inset-y-2 left-1 w-1 rounded-full {{ request()->routeIs(str_replace('.index', '.*', $item['route'])) || request()->routeIs($item['route']) ? 'bg-white/90' : 'bg-transparent group-hover:bg-primary-200 dark:group-hover:bg-primary-800' }}"></span>
+                                    <i data-lucide="{{ $item['icon'] }}" class="h-4 w-4 transition-all duration-200 group-hover:scale-105 {{ request()->routeIs(str_replace('.index', '.*', $item['route'])) || request()->routeIs($item['route']) ? 'text-white' : 'group-hover:text-primary-700 dark:group-hover:text-primary-300' }}"></i>
                                     {{ $item['label'] }}
                                 </a>
                             @endforeach
@@ -186,14 +275,9 @@
                 </div>
             @endif
 
-            @if($errors->any())
+            @if(session('error'))
                 <div class="mb-6 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-900/50 dark:bg-red-950/30 dark:text-red-300">
-                    <p class="font-medium">Formani qayta tekshiring.</p>
-                    <ul class="mt-2 list-disc pl-5">
-                        @foreach($errors->all() as $error)
-                            <li>{{ $error }}</li>
-                        @endforeach
-                    </ul>
+                    {{ session('error') }}
                 </div>
             @endif
 

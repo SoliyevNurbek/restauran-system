@@ -76,7 +76,7 @@ class HallController extends Controller
             'price' => ['required', 'numeric', 'min:0'],
             'status' => ['required', 'in:Faol,Nofaol,Ta\'mirda'],
             'description' => ['nullable', 'string', 'max:2000'],
-            'image' => ['nullable', 'image', 'max:4096'],
+            'image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:4096'],
         ]);
     }
 }

@@ -11,7 +11,7 @@
                 <tr class="border-t border-slate-100 dark:border-slate-800">
                     <td class="px-4 py-3 font-medium">{{ $category->name }}</td>
                     <td class="px-4 py-3">{{ $category->type }}</td>
-                    <td class="px-4 py-3"><div class="flex justify-end gap-2"><a href="{{ route('expenses.categories.edit', $category) }}" class="rounded-lg border border-slate-200 px-3 py-1.5 text-xs dark:border-slate-700">Tahrirlash</a><form action="{{ route('expenses.categories.destroy', $category) }}" method="POST">@csrf @method('DELETE')<x-delete-button /></form></div></td>
+                    <td class="px-4 py-3"><div class="responsive-actions flex justify-end gap-2"><x-action-link href="{{ route('expenses.categories.edit', $category) }}" icon="pencil-line" variant="edit">Tahrirlash</x-action-link><form action="{{ route('expenses.categories.destroy', $category) }}" method="POST">@csrf @method('DELETE')<x-delete-button /></form></div></td>
                 </tr>
             @empty
                 <tr><td colspan="3" class="px-4 py-6 text-center text-slate-500">Kategoriyalar topilmadi.</td></tr>

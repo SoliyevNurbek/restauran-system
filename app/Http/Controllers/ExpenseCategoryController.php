@@ -28,32 +28,32 @@ class ExpenseCategoryController extends Controller
         return redirect()->route('inventory-expense-categories.index')->with('success', 'Xarajat kategoriyasi yaratildi.');
     }
 
-    public function show(ExpenseCategory $expenseCategory): RedirectResponse
+    public function show(ExpenseCategory $inventory_expense_category): RedirectResponse
     {
-        return redirect()->route('inventory-expense-categories.edit', $expenseCategory);
+        return redirect()->route('inventory-expense-categories.edit', ['inventory_expense_category' => $inventory_expense_category]);
     }
 
-    public function edit(ExpenseCategory $expenseCategory): View
+    public function edit(ExpenseCategory $inventory_expense_category): View
     {
-        return view('finance-expense-categories.edit', compact('expenseCategory'));
+        return view('finance-expense-categories.edit', ['expenseCategory' => $inventory_expense_category]);
     }
 
-    public function update(Request $request, ExpenseCategory $expenseCategory): RedirectResponse
+    public function update(Request $request, ExpenseCategory $inventory_expense_category): RedirectResponse
     {
-        $expenseCategory->update($this->validateCategory($request));
+        $inventory_expense_category->update($this->validateCategory($request));
 
         return redirect()->route('inventory-expense-categories.index')->with('success', 'Xarajat kategoriyasi yangilandi.');
     }
 
-    public function destroy(ExpenseCategory $expenseCategory): RedirectResponse
+    public function destroy(ExpenseCategory $inventory_expense_category): RedirectResponse
     {
-        if ($expenseCategory->expenses()->exists()) {
+        if ($inventory_expense_category->expenses()->exists()) {
             return back()->withErrors([
                 'delete' => 'Bu kategoriya xarajatlarga biriktirilgan. Avval xarajatlarni o\'zgartiring.',
             ]);
         }
 
-        $expenseCategory->delete();
+        $inventory_expense_category->delete();
 
         return redirect()->route('inventory-expense-categories.index')->with('success', 'Xarajat kategoriyasi o\'chirildi.');
     }

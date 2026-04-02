@@ -2,16 +2,20 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\Bookings\UpsertBookingRequest;
 use App\Models\Booking;
 use App\Models\Client;
 use App\Models\EventType;
 use App\Models\Hall;
 use App\Models\Service;
 use App\Models\WeddingPackage;
+use App\Models\WeddingPackageImage;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
 class BookingController extends Controller
@@ -31,9 +35,9 @@ class BookingController extends Controller
         ])));
     }
 
-    public function store(Request $request): RedirectResponse
+    public function store(UpsertBookingRequest $request): RedirectResponse
     {
-        $data = $this->validateData($request);
+        $data = $this->validatedData($request);
 
         DB::transaction(function () use ($data) {
             $booking = Booking::create([
@@ -43,6 +47,13 @@ class BookingController extends Controller
 
             $this->syncServicesAndMoney($booking, $data['services'] ?? []);
         });
+
+        Log::channel('audit')->info('Booking created.', [
+            'user_id' => $request->user()?->getKey(),
+            'hall_id' => $data['hall_id'],
+            'event_date' => $data['event_date'],
+            'ip' => $request->ip(),
+        ]);
 
         return redirect()->route('bookings.index')->with('success', 'Bron muvaffaqiyatli yaratildi.');
     }
@@ -69,21 +80,49 @@ class BookingController extends Controller
         return view('orders.edit', $this->formData($booking->load('services')));
     }
 
-    public function update(Request $request, Booking $booking): RedirectResponse
+    public function update(UpsertBookingRequest $request, Booking $booking): RedirectResponse
     {
-        $data = $this->validateData($request, $booking);
+        $data = $this->validatedData($request, $booking);
+        $oldStatus = $booking->status;
 
         DB::transaction(function () use ($booking, $data) {
+            $oldPackageImagePath = $booking->package_image_path;
             $booking->update($data);
             $this->syncServicesAndMoney($booking, $data['services'] ?? []);
+
+            if ($oldPackageImagePath && $oldPackageImagePath !== $booking->package_image_path) {
+                Storage::disk('public')->delete($oldPackageImagePath);
+            }
         });
+
+        Log::channel('audit')->warning('Booking updated.', [
+            'user_id' => $request->user()?->getKey(),
+            'booking_id' => $booking->getKey(),
+            'old_status' => $oldStatus,
+            'new_status' => $data['status'],
+            'ip' => $request->ip(),
+        ]);
 
         return redirect()->route('bookings.index')->with('success', 'Bron muvaffaqiyatli yangilandi.');
     }
 
-    public function destroy(Booking $booking): RedirectResponse
+    public function destroy(\Illuminate\Http\Request $request, Booking $booking): RedirectResponse
     {
+        $bookingId = $booking->getKey();
+        $status = $booking->status;
+
+        if ($booking->package_image_path) {
+            Storage::disk('public')->delete($booking->package_image_path);
+        }
+
         $booking->delete();
+
+        Log::channel('audit')->warning('Booking deleted.', [
+            'user_id' => $request->user()?->getKey(),
+            'booking_id' => $bookingId,
+            'status' => $status,
+            'ip' => $request->ip(),
+        ]);
 
         return redirect()->route('bookings.index')->with('success', 'Bron muvaffaqiyatli o\'chirildi.');
     }
@@ -95,33 +134,27 @@ class BookingController extends Controller
             'clients' => Client::orderBy('full_name')->get(),
             'eventTypes' => EventType::orderBy('name')->get(),
             'halls' => Hall::orderBy('name')->get(),
-            'packages' => WeddingPackage::orderBy('name')->get(),
+            'packages' => WeddingPackage::with('images')->orderBy('name')->get(),
             'services' => Service::where('status', 'Faol')->orderBy('name')->get(),
             'statuses' => $this->statuses(),
+            'paymentMethods' => $this->paymentMethods(),
+            'currencies' => $this->currencies(),
         ];
     }
 
-    private function validateData(Request $request, ?Booking $booking = null): array
+    private function validatedData(UpsertBookingRequest $request, ?Booking $booking = null): array
     {
-        $data = $request->validate([
-            'client_id' => ['nullable', 'exists:clients,id'],
-            'hall_id' => ['required', 'exists:halls,id'],
-            'event_type_id' => ['required', 'exists:event_types,id'],
-            'package_id' => ['nullable', 'exists:wedding_packages,id'],
-            'event_date' => ['required', 'date'],
-            'start_time' => ['required', 'date_format:H:i'],
-            'end_time' => ['required', 'date_format:H:i', 'after:start_time'],
-            'guest_count' => ['required', 'integer', 'min:1'],
-            'price_per_person' => ['required', 'numeric', 'min:0'],
-            'advance_amount' => ['nullable', 'numeric', 'min:0'],
-            'status' => ['required', 'in:'.implode(',', array_keys($this->statuses()))],
-            'notes' => ['nullable', 'string', 'max:2000'],
-            'services' => ['nullable', 'array'],
-            'services.*.service_id' => ['required', 'exists:services,id'],
-            'services.*.quantity' => ['required', 'integer', 'min:1'],
-        ]);
+        $data = $request->validated();
+
+        $data['start_time'] = substr((string) $data['start_time'], 0, 5);
+        $data['end_time'] = substr((string) $data['end_time'], 0, 5);
+
+        validator($data, [
+            'end_time' => ['required', 'after:start_time'],
+        ])->validate();
 
         $this->ensureNoHallConflict($data, $booking);
+        $this->ensurePackageImageBelongsToPackage($data);
 
         return $data;
     }
@@ -138,7 +171,9 @@ class BookingController extends Controller
         }
 
         if ($query->exists()) {
-            abort(422, 'Tanlangan zal ushbu vaqt oralig\'ida band.');
+            throw ValidationException::withMessages([
+                'hall_id' => 'Tanlangan zal ushbu vaqt oralig\'ida band.',
+            ]);
         }
     }
 
@@ -167,6 +202,11 @@ class BookingController extends Controller
 
         $totalAmount = $packageTotal + $servicesTotal;
         $advanceAmount = (float) ($booking->advance_amount ?? 0);
+        if ($advanceAmount > $totalAmount) {
+            throw ValidationException::withMessages([
+                'advance_amount' => 'Boshlang\'ich to\'lov jami summadan oshib ketmasligi kerak.',
+            ]);
+        }
         $paidAmount = max((float) $booking->payments()->sum('amount'), $advanceAmount);
         $remainingAmount = max($totalAmount - $paidAmount, 0);
 
@@ -176,6 +216,51 @@ class BookingController extends Controller
             'paid_amount' => $paidAmount,
             'remaining_amount' => $remainingAmount,
         ]);
+    }
+
+    private function ensurePackageImageBelongsToPackage(array &$data): void
+    {
+        if (empty($data['package_gallery_image_id'])) {
+            $data['package_gallery_image_id'] = null;
+            $data['package_image_path'] = null;
+
+            return;
+        }
+
+        if (empty($data['package_id'])) {
+            throw ValidationException::withMessages([
+                'package_gallery_image_id' => 'Avval to\'y paketini tanlang.',
+            ]);
+        }
+
+        $image = WeddingPackageImage::where('id', $data['package_gallery_image_id'])
+            ->where('wedding_package_id', $data['package_id'])
+            ->first();
+
+        if (! $image) {
+            throw ValidationException::withMessages([
+                'package_gallery_image_id' => 'Tanlangan rasm ushbu paketga tegishli emas.',
+            ]);
+        }
+
+        $data['package_image_path'] = $this->copyPackageImageToBooking($image->image_path);
+    }
+
+    private function copyPackageImageToBooking(string $imagePath): string
+    {
+        $disk = Storage::disk('public');
+
+        if (! $disk->exists($imagePath)) {
+            throw ValidationException::withMessages([
+                'package_gallery_image_id' => 'Tanlangan paket rasmi topilmadi.',
+            ]);
+        }
+
+        $extension = pathinfo($imagePath, PATHINFO_EXTENSION) ?: 'jpg';
+        $newPath = 'booking-packages/'.now()->format('Y/m').'/'.Str::uuid().'.'.$extension;
+        $disk->copy($imagePath, $newPath);
+
+        return $newPath;
     }
 
     private function makeBookingNumber(): string
@@ -191,6 +276,19 @@ class BookingController extends Controller
             'Tayyorlanmoqda' => 'Tayyorlanmoqda',
             'Otkazildi' => 'Otkazildi',
             'Bekor qilindi' => 'Bekor qilindi',
+        ];
+    }
+
+    private function paymentMethods(): array
+    {
+        return ['Naqd', 'Karta', 'Bank o\'tkazma', 'Click', 'Payme', 'Boshqa'];
+    }
+
+    private function currencies(): array
+    {
+        return [
+            'UZS' => 'So\'m',
+            'USD' => 'Dollar',
         ];
     }
 }

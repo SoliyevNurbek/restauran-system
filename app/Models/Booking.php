@@ -19,13 +19,17 @@ class Booking extends Model
         'hall_id',
         'event_type_id',
         'package_id',
+        'package_gallery_image_id',
+        'package_image_path',
         'event_date',
         'start_time',
         'end_time',
         'guest_count',
         'price_per_person',
+        'currency',
         'total_amount',
         'advance_amount',
+        'payment_method',
         'paid_amount',
         'remaining_amount',
         'status',
@@ -88,6 +92,11 @@ class Booking extends Model
     public function fixedCosts(): HasMany
     {
         return $this->hasMany(FixedCost::class);
+    }
+
+    public function usageItems(): HasMany
+    {
+        return $this->hasMany(BookingUsageItem::class);
     }
 
     public function getKitchenCostsTotalAttribute(): float

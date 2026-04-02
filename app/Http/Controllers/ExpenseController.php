@@ -31,29 +31,29 @@ class ExpenseController extends Controller
         return redirect()->route('inventory-expenses.index')->with('success', 'Xarajat saqlandi.');
     }
 
-    public function show(Expense $expense): RedirectResponse
+    public function show(Expense $inventory_expense): RedirectResponse
     {
-        return redirect()->route('inventory-expenses.edit', $expense);
+        return redirect()->route('inventory-expenses.edit', ['inventory_expense' => $inventory_expense]);
     }
 
-    public function edit(Expense $expense): View
+    public function edit(Expense $inventory_expense): View
     {
         return view('finance-expenses.edit', [
-            'expense' => $expense,
+            'expense' => $inventory_expense,
             'categories' => ExpenseCategory::orderBy('name')->get(),
         ]);
     }
 
-    public function update(Request $request, Expense $expense): RedirectResponse
+    public function update(Request $request, Expense $inventory_expense): RedirectResponse
     {
-        $expense->update($this->validateExpense($request));
+        $inventory_expense->update($this->validateExpense($request));
 
         return redirect()->route('inventory-expenses.index')->with('success', 'Xarajat yangilandi.');
     }
 
-    public function destroy(Expense $expense): RedirectResponse
+    public function destroy(Expense $inventory_expense): RedirectResponse
     {
-        $expense->delete();
+        $inventory_expense->delete();
 
         return redirect()->route('inventory-expenses.index')->with('success', 'Xarajat o\'chirildi.');
     }

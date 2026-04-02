@@ -8,7 +8,7 @@
     </div>
 
     <div class="overflow-hidden rounded-3xl bg-white shadow-soft dark:bg-slate-900">
-        <div class="overflow-x-auto">
+        <div class="mobile-fit-table overflow-x-auto">
             <table class="min-w-full text-left text-sm">
                 <thead class="bg-slate-50 text-slate-500 dark:bg-slate-800/70 dark:text-slate-300">
                 <tr>
@@ -24,13 +24,13 @@
                     <tr class="border-t border-slate-100 dark:border-slate-800">
                         <td class="px-5 py-4 font-medium text-slate-900 dark:text-white">{{ $supplier->full_name }}</td>
                         <td class="px-5 py-4">{{ $supplier->phone }}</td>
-                        <td class="px-5 py-4">{{ $supplier->company_name ?: '—' }}</td>
-                        <td class="px-5 py-4 font-semibold {{ $supplier->balance > 0 ? 'text-amber-600 dark:text-amber-300' : 'text-emerald-600 dark:text-emerald-300' }}">{{ number_format($supplier->balance, 2) }}</td>
+                        <td class="px-5 py-4">{{ $supplier->company_name ?: '-' }}</td>
+                        <td class="px-5 py-4 font-semibold {{ $supplier->balance > 0 ? 'text-amber-600 dark:text-amber-300' : 'text-emerald-600 dark:text-emerald-300' }}"><x-money :value="$supplier->balance" /></td>
                         <td class="px-5 py-4">
-                            <div class="flex flex-wrap gap-2">
-                                <a href="{{ route('suppliers.show', $supplier) }}" class="rounded-xl border border-slate-200 px-3 py-1.5 text-xs font-medium dark:border-slate-700">Ko'rish</a>
-                                <a href="{{ route('suppliers.edit', $supplier) }}" class="rounded-xl bg-slate-900 px-3 py-1.5 text-xs font-medium text-white dark:bg-slate-100 dark:text-slate-900">Tahrirlash</a>
-                                <form method="POST" action="{{ route('suppliers.destroy', $supplier) }}">
+                            <div class="flex min-w-[140px] flex-col items-start gap-2">
+                                <x-action-link href="{{ route('suppliers.show', $supplier) }}" icon="eye" variant="view">Ko'rish</x-action-link>
+                                <x-action-link href="{{ route('suppliers.edit', $supplier) }}" icon="pencil-line" variant="edit">Tahrirlash</x-action-link>
+                                <form method="POST" action="{{ route('suppliers.destroy', $supplier) }}" class="shrink-0">
                                     @csrf
                                     @method('DELETE')
                                     <x-delete-button />

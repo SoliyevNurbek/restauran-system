@@ -11,19 +11,28 @@ class ProductController extends Controller
 {
     public function index(): View
     {
-        return view('products.index', [
-            'products' => Product::latest()->paginate(15),
+        return view('master-products.index', [
+            'products' => Product::latest()->take(5)->get(),
         ]);
     }
 
     public function create(): View
     {
-        return view('products.create');
+        return view('master-products.create', $this->formData(new Product()));
     }
 
     public function store(Request $request): RedirectResponse
     {
-        Product::create($this->validateProduct($request));
+        $validated = $this->validateProduct($request, allowExistingSku: true);
+        $existingProduct = Product::where('sku', $validated['sku'])->first();
+
+        if ($existingProduct) {
+            $existingProduct->update($this->prepareProductPayload($validated, $existingProduct));
+
+            return redirect()->route('products.index')->with('success', 'Mahsulot yangilandi va olib kelingan miqdor qoldiqqa qo\'shildi.');
+        }
+
+        Product::create($this->prepareProductPayload($validated));
 
         return redirect()->route('products.index')->with('success', 'Mahsulot yaratildi.');
     }
@@ -35,12 +44,13 @@ class ProductController extends Controller
 
     public function edit(Product $product): View
     {
-        return view('products.edit', compact('product'));
+        return view('master-products.edit', $this->formData($product));
     }
 
     public function update(Request $request, Product $product): RedirectResponse
     {
-        $product->update($this->validateProduct($request, $product));
+        $validated = $this->validateProduct($request, $product);
+        $product->update($this->prepareProductPayload($validated, $product, true));
 
         return redirect()->route('products.index')->with('success', 'Mahsulot yangilandi.');
     }
@@ -58,25 +68,54 @@ class ProductController extends Controller
         return redirect()->route('products.index')->with('success', 'Mahsulot o\'chirildi.');
     }
 
-    private function validateProduct(Request $request, ?Product $product = null): array
+    private function validateProduct(Request $request, ?Product $product = null, bool $allowExistingSku = false): array
     {
-        $skuRule = ['nullable', 'string', 'max:100'];
+        $skuRule = ['required', 'string', 'max:100'];
 
         if ($product) {
             $skuRule[] = 'unique:products,sku,'.$product->id;
-        } else {
+        } elseif (! $allowExistingSku) {
             $skuRule[] = 'unique:products,sku';
         }
 
         return $request->validate([
+            'category' => ['required', 'string', 'max:100'],
+            'subcategory' => ['required', 'string', 'max:100'],
             'name' => ['required', 'string', 'max:255'],
-            'unit' => ['required', 'string', 'max:30'],
+            'unit' => ['required', 'in:'.implode(',', Product::UNIT_OPTIONS)],
             'sku' => $skuRule,
+            'received_quantity' => ['nullable', 'numeric', 'min:0'],
             'minimum_stock' => ['nullable', 'numeric', 'min:0'],
             'current_stock' => ['nullable', 'numeric', 'min:0'],
             'last_purchase_price' => ['nullable', 'numeric', 'min:0'],
             'notes' => ['nullable', 'string', 'max:2000'],
             'is_active' => ['required', 'boolean'],
         ]);
+    }
+
+    private function prepareProductPayload(array $validated, ?Product $existingProduct = null, bool $isUpdate = false): array
+    {
+        $receivedQuantity = (float) ($validated['received_quantity'] ?? 0);
+        $baseStock = $existingProduct ? (float) $existingProduct->current_stock : (float) ($validated['current_stock'] ?? 0);
+
+        if ($isUpdate) {
+            $baseStock = (float) ($validated['current_stock'] ?? $baseStock);
+        }
+
+        $validated['current_stock'] = $baseStock + $receivedQuantity;
+        $validated['received_quantity'] = $receivedQuantity;
+
+        return $validated;
+    }
+
+    private function formData(Product $product): array
+    {
+        return [
+            'product' => $product,
+            'catalogProducts' => Product::orderBy('sku')->get(['sku', 'name', 'category', 'subcategory', 'unit']),
+            'categories' => Product::query()->whereNotNull('category')->distinct()->orderBy('category')->pluck('category'),
+            'subcategories' => Product::query()->whereNotNull('subcategory')->distinct()->orderBy('subcategory')->pluck('subcategory'),
+            'unitOptions' => Product::UNIT_OPTIONS,
+        ];
     }
 }

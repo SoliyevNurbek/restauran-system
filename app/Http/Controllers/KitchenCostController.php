@@ -74,7 +74,14 @@ class KitchenCostController extends Controller
             'salary_cost' => ['nullable', 'numeric', 'min:0'],
             'tax_share' => ['nullable', 'numeric', 'min:0'],
         ]);
+
+        $data['gas_cost'] = (float) ($data['gas_cost'] ?? 0);
+        $data['electric_cost'] = (float) ($data['electric_cost'] ?? 0);
+        $data['salary_cost'] = (float) ($data['salary_cost'] ?? 0);
+        $data['tax_share'] = (float) ($data['tax_share'] ?? 0);
+
         $data['total_price'] = (float) $data['quantity'] * (float) $data['unit_price'];
+
         return $data;
     }
 }
