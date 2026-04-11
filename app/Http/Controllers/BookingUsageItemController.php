@@ -5,9 +5,11 @@ namespace App\Http\Controllers;
 use App\Models\Booking;
 use App\Models\BookingUsageItem;
 use App\Models\Product;
+use App\Support\TenantContext;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
@@ -125,9 +127,11 @@ class BookingUsageItemController extends Controller
 
     private function validateData(Request $request): array
     {
+        $tenantId = TenantContext::id();
+
         return $request->validate([
-            'booking_id' => ['required', 'exists:bookings,id'],
-            'product_id' => ['required', 'exists:products,id'],
+            'booking_id' => ['required', Rule::exists('bookings', 'id')->where('venue_connection_id', $tenantId)],
+            'product_id' => ['required', Rule::exists('products', 'id')->where('venue_connection_id', $tenantId)],
             'quantity' => ['required', 'numeric', 'min:0.001'],
             'notes' => ['nullable', 'string', 'max:2000'],
         ]);

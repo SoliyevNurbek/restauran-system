@@ -3,8 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\EventType;
+use App\Support\TenantContext;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
 class EventTypeController extends Controller
@@ -21,8 +23,10 @@ class EventTypeController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
+        $tenantId = TenantContext::id();
+
         EventType::create($request->validate([
-            'name' => ['required', 'string', 'max:255', 'unique:event_types,name'],
+            'name' => ['required', 'string', 'max:255', Rule::unique('event_types', 'name')->where('venue_connection_id', $tenantId)],
             'description' => ['nullable', 'string', 'max:2000'],
         ]));
 
@@ -41,8 +45,10 @@ class EventTypeController extends Controller
 
     public function update(Request $request, EventType $eventType): RedirectResponse
     {
+        $tenantId = TenantContext::id();
+
         $eventType->update($request->validate([
-            'name' => ['required', 'string', 'max:255', 'unique:event_types,name,'.$eventType->id],
+            'name' => ['required', 'string', 'max:255', Rule::unique('event_types', 'name')->ignore($eventType->id)->where('venue_connection_id', $tenantId)],
             'description' => ['nullable', 'string', 'max:2000'],
         ]));
 

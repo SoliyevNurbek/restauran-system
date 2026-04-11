@@ -5,8 +5,10 @@ namespace App\Http\Controllers;
 use App\Models\Booking;
 use App\Models\CostCategory;
 use App\Models\KitchenCost;
+use App\Support\TenantContext;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
 class KitchenCostController extends Controller
@@ -63,9 +65,11 @@ class KitchenCostController extends Controller
 
     private function payload(Request $request): array
     {
+        $tenantId = TenantContext::id();
+
         $data = $request->validate([
-            'booking_id' => ['required', 'exists:bookings,id'],
-            'category_id' => ['nullable', 'exists:cost_categories,id'],
+            'booking_id' => ['required', Rule::exists('bookings', 'id')->where('venue_connection_id', $tenantId)],
+            'category_id' => ['nullable', Rule::exists('cost_categories', 'id')->where('venue_connection_id', $tenantId)],
             'product_name' => ['required', 'string', 'max:255'],
             'quantity' => ['required', 'numeric', 'min:0.01'],
             'unit_price' => ['required', 'numeric', 'min:0'],

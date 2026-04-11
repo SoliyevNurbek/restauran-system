@@ -4,7 +4,9 @@ namespace App\Http\Requests\Payments;
 
 use App\Models\Booking;
 use App\Models\Payment;
+use App\Support\TenantContext;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\Validator;
 
 class StorePaymentRequest extends FormRequest
@@ -23,8 +25,10 @@ class StorePaymentRequest extends FormRequest
 
     public function rules(): array
     {
+        $tenantId = TenantContext::id();
+
         return [
-            'booking_id' => ['required', 'integer', 'exists:bookings,id'],
+            'booking_id' => ['required', 'integer', Rule::exists('bookings', 'id')->where('venue_connection_id', $tenantId)],
             'amount' => ['required', 'numeric', 'min:0.01', 'max:999999999.99'],
             'payment_method' => ['required', 'in:Naqd,Karta,Bank o\'tkazma,Click,Payme,Boshqa'],
             'payment_date' => ['required', 'date'],

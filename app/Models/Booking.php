@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToTenant;
 use Carbon\Carbon;
 use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -11,9 +12,10 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Booking extends Model
 {
-    use HasFactory;
+    use HasFactory, BelongsToTenant;
 
     protected $fillable = [
+        'venue_connection_id',
         'booking_number',
         'client_id',
         'hall_id',
@@ -21,6 +23,7 @@ class Booking extends Model
         'package_id',
         'package_gallery_image_id',
         'package_image_path',
+        'package_image_media_file_id',
         'event_date',
         'start_time',
         'end_time',
@@ -67,6 +70,16 @@ class Booking extends Model
     public function package(): BelongsTo
     {
         return $this->belongsTo(WeddingPackage::class, 'package_id');
+    }
+
+    public function packageGalleryImage(): BelongsTo
+    {
+        return $this->belongsTo(WeddingPackageImage::class, 'package_gallery_image_id');
+    }
+
+    public function packageImageMediaFile(): BelongsTo
+    {
+        return $this->belongsTo(MediaFile::class, 'package_image_media_file_id');
     }
 
     public function services(): HasMany
@@ -132,5 +145,10 @@ class Booking extends Model
     public function scopeForDay($query, CarbonInterface|string $date)
     {
         return $query->whereDate('event_date', Carbon::parse($date)->toDateString());
+    }
+
+    public function getPackageImageUrlAttribute(): ?string
+    {
+        return $this->packageImageMediaFile?->url();
     }
 }

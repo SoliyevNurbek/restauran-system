@@ -5,11 +5,27 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{{ $title ?? 'Restoran CRM' }}</title>
-    <link rel="icon" type="image/png" href="{{ !empty($appSetting?->favicon_path) ? asset('storage/'.$appSetting->favicon_path) : (!empty($appSetting?->logo_path) ? asset('storage/'.$appSetting->logo_path) : asset('Javohirlogo.png')) }}">
-    <link rel="shortcut icon" href="{{ !empty($appSetting?->favicon_path) ? asset('storage/'.$appSetting->favicon_path) : (!empty($appSetting?->logo_path) ? asset('storage/'.$appSetting->logo_path) : asset('Javohirlogo.png')) }}">
+    @php
+        $resolvedSetting = \Illuminate\Support\Facades\Schema::hasTable('settings')
+            ? \App\Models\Setting::currentFor(auth()->user())
+            : null;
+        $resolvedMediaAssets = \Illuminate\Support\Facades\Schema::hasTable('media_assets')
+            ? \App\Models\MediaAsset::keyed(auth()->user())
+            : collect();
+        $brandLogo = $resolvedMediaAssets->get('brand_logo');
+        $brandFavicon = $resolvedMediaAssets->get('brand_favicon');
+        $brandLogoUrl = $brandLogo?->url() ?: $resolvedSetting?->logoUrl();
+        $brandFaviconUrl = $brandFavicon?->url()
+            ?: $resolvedSetting?->faviconUrl()
+            ?: $brandLogoUrl;
+    @endphp
+    @if($brandFaviconUrl)
+        <link rel="icon" type="image/png" href="{{ $brandFaviconUrl }}">
+        <link rel="shortcut icon" href="{{ $brandFaviconUrl }}">
+    @endif
     <script>
         (() => {
-            const theme = localStorage.getItem('theme') || '{{ $appSetting->theme_preference ?? 'light' }}';
+            const theme = localStorage.getItem('theme') || '{{ $resolvedSetting->theme_preference ?? 'light' }}';
             if (theme === 'dark') document.documentElement.classList.add('dark');
         })();
     </script>
@@ -168,16 +184,14 @@
            :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'">
         <div class="border-b border-slate-200 px-5 py-5 dark:border-slate-800">
             <div class="flex items-center gap-3 rounded-3xl bg-primary-600 px-4 py-4 text-white">
-                @if(!empty($appSetting?->logo_path))
-                    <img src="{{ asset('storage/'.$appSetting->logo_path) }}" alt="Logo" class="h-12 w-12 rounded-2xl object-cover">
+                @if($brandLogoUrl)
+                    <img src="{{ $brandLogoUrl }}" alt="Logo" class="h-12 w-12 rounded-2xl object-cover">
                 @else
-                    <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/15 p-2">
-                        <img src="{{ asset('Javohirlogo.png') }}" alt="Logo" class="h-full w-full object-contain">
-                    </div>
+                    <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/15 p-2 text-sm font-bold">MR</div>
                 @endif
                 <div class="min-w-0">
                     <p class="text-xs uppercase tracking-[0.25em] text-white/70">CRM</p>
-                    <p class="truncate text-sm font-semibold">{{ $appSetting->restaurant_name ?? 'Restoran CRM' }}</p>
+                    <p class="truncate text-sm font-semibold">{{ $resolvedSetting?->restaurant_name ?: 'Restoran CRM' }}</p>
                 </div>
             </div>
         </div>

@@ -3,7 +3,6 @@
 namespace App\Http\Requests\Settings;
 
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Support\Str;
 use Illuminate\Validation\Rules\File;
 
 class UpdateSettingsRequest extends FormRequest
@@ -18,7 +17,6 @@ class UpdateSettingsRequest extends FormRequest
         $this->merge([
             'restaurant_name' => trim((string) $this->input('restaurant_name', '')),
             'contact_phone' => $this->normalizeNullableString('contact_phone'),
-            'notification_email' => $this->normalizeNullableEmail('notification_email'),
         ]);
     }
 
@@ -27,7 +25,6 @@ class UpdateSettingsRequest extends FormRequest
         return [
             'restaurant_name' => ['required', 'string', 'min:2', 'max:255'],
             'contact_phone' => ['nullable', 'string', 'max:30'],
-            'notification_email' => ['nullable', 'email:rfc,dns', 'max:255'],
             'logo' => [
                 'nullable',
                 File::image()->types(['jpg', 'jpeg', 'png', 'webp'])->max(4 * 1024),
@@ -35,6 +32,26 @@ class UpdateSettingsRequest extends FormRequest
             'favicon' => [
                 'nullable',
                 File::types(['png', 'jpg', 'jpeg', 'webp', 'ico'])->max(2 * 1024),
+            ],
+            'brand_logo' => [
+                'nullable',
+                File::types(['jpg', 'jpeg', 'png', 'webp', 'svg'])->max(4 * 1024),
+            ],
+            'brand_favicon' => [
+                'nullable',
+                File::types(['png', 'jpg', 'jpeg', 'webp', 'ico'])->max(2 * 1024),
+            ],
+            'landing_preview_dashboard' => [
+                'nullable',
+                File::image()->types(['jpg', 'jpeg', 'png', 'webp'])->max(4 * 1024),
+            ],
+            'landing_preview_admin' => [
+                'nullable',
+                File::image()->types(['jpg', 'jpeg', 'png', 'webp'])->max(4 * 1024),
+            ],
+            'landing_preview_analytics' => [
+                'nullable',
+                File::image()->types(['jpg', 'jpeg', 'png', 'webp'])->max(4 * 1024),
             ],
         ];
     }
@@ -44,12 +61,5 @@ class UpdateSettingsRequest extends FormRequest
         $value = trim((string) $this->input($key, ''));
 
         return $value !== '' ? $value : null;
-    }
-
-    private function normalizeNullableEmail(string $key): ?string
-    {
-        $value = trim((string) $this->input($key, ''));
-
-        return $value !== '' ? Str::lower($value) : null;
     }
 }

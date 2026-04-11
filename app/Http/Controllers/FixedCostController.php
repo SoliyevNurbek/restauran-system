@@ -4,8 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Models\Booking;
 use App\Models\FixedCost;
+use App\Support\TenantContext;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
 class FixedCostController extends Controller
@@ -60,8 +62,10 @@ class FixedCostController extends Controller
 
     private function validateData(Request $request): array
     {
+        $tenantId = TenantContext::id();
+
         return $request->validate([
-            'booking_id' => ['required', 'exists:bookings,id'],
+            'booking_id' => ['required', Rule::exists('bookings', 'id')->where('venue_connection_id', $tenantId)],
             'name' => ['required', 'string', 'max:255'],
             'monthly_amount' => ['required', 'numeric', 'min:0'],
             'allocated_amount' => ['required', 'numeric', 'min:0'],

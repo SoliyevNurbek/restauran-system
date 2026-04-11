@@ -7,23 +7,43 @@ use App\Models\Booking;
 use App\Models\Client;
 use App\Models\EventType;
 use App\Models\Hall;
+use App\Models\MediaFile;
 use App\Models\Service;
 use App\Models\WeddingPackage;
 use App\Models\WeddingPackageImage;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
 class BookingController extends Controller
 {
-    public function index(): View
+    public function index(\Illuminate\Http\Request $request): View
     {
+        $search = trim((string) $request->string('q'));
+        $status = (string) $request->query('status', '');
+        $hallId = (int) $request->integer('hall_id');
+        $date = (string) $request->query('date', '');
+
         return view('orders.index', [
-            'bookings' => Booking::with(['client', 'hall', 'eventType', 'package', 'services.service'])->latest()->paginate(10),
+            'bookings' => Booking::with(['client', 'hall', 'eventType', 'package', 'services.service'])
+                ->when($search !== '', function ($query) use ($search) {
+                    $query->where(function ($inner) use ($search) {
+                        $inner->where('booking_number', 'like', "%{$search}%")
+                            ->orWhereHas('client', fn ($client) => $client->where('full_name', 'like', "%{$search}%")->orWhere('phone', 'like', "%{$search}%"))
+                            ->orWhereHas('hall', fn ($hall) => $hall->where('name', 'like', "%{$search}%"));
+                    });
+                })
+                ->when($status !== '', fn ($query) => $query->where('status', $status))
+                ->when($hallId > 0, fn ($query) => $query->where('hall_id', $hallId))
+                ->when($date !== '', fn ($query) => $query->whereDate('event_date', $date))
+                ->latest('event_date')
+                ->paginate(10)
+                ->withQueryString(),
+            'filters' => compact('search', 'status', 'hallId', 'date'),
+            'hallOptions' => Hall::query()->orderBy('name')->get(['id', 'name']),
         ]);
     }
 
@@ -86,12 +106,12 @@ class BookingController extends Controller
         $oldStatus = $booking->status;
 
         DB::transaction(function () use ($booking, $data) {
-            $oldPackageImagePath = $booking->package_image_path;
+            $oldPackageImageMediaFileId = $booking->package_image_media_file_id;
             $booking->update($data);
             $this->syncServicesAndMoney($booking, $data['services'] ?? []);
 
-            if ($oldPackageImagePath && $oldPackageImagePath !== $booking->package_image_path) {
-                Storage::disk('public')->delete($oldPackageImagePath);
+            if ($oldPackageImageMediaFileId && $oldPackageImageMediaFileId !== $booking->package_image_media_file_id) {
+                MediaFile::query()->whereKey($oldPackageImageMediaFileId)->delete();
             }
         });
 
@@ -111,9 +131,7 @@ class BookingController extends Controller
         $bookingId = $booking->getKey();
         $status = $booking->status;
 
-        if ($booking->package_image_path) {
-            Storage::disk('public')->delete($booking->package_image_path);
-        }
+        MediaFile::query()->whereKey($booking->package_image_media_file_id)->delete();
 
         $booking->delete();
 
@@ -223,6 +241,7 @@ class BookingController extends Controller
         if (empty($data['package_gallery_image_id'])) {
             $data['package_gallery_image_id'] = null;
             $data['package_image_path'] = null;
+            $data['package_image_media_file_id'] = null;
 
             return;
         }
@@ -243,24 +262,22 @@ class BookingController extends Controller
             ]);
         }
 
-        $data['package_image_path'] = $this->copyPackageImageToBooking($image->image_path);
+        $mediaFile = $this->copyPackageImageToBooking($image);
+        $data['package_image_path'] = $mediaFile?->filename;
+        $data['package_image_media_file_id'] = $mediaFile?->getKey();
     }
 
-    private function copyPackageImageToBooking(string $imagePath): string
+    private function copyPackageImageToBooking(WeddingPackageImage $image): ?MediaFile
     {
-        $disk = Storage::disk('public');
+        $clonedMedia = MediaFile::cloneFrom($image->mediaFile);
 
-        if (! $disk->exists($imagePath)) {
+        if (! $clonedMedia) {
             throw ValidationException::withMessages([
                 'package_gallery_image_id' => 'Tanlangan paket rasmi topilmadi.',
             ]);
         }
 
-        $extension = pathinfo($imagePath, PATHINFO_EXTENSION) ?: 'jpg';
-        $newPath = 'booking-packages/'.now()->format('Y/m').'/'.Str::uuid().'.'.$extension;
-        $disk->copy($imagePath, $newPath);
-
-        return $newPath;
+        return $clonedMedia;
     }
 
     private function makeBookingNumber(): string
@@ -272,8 +289,12 @@ class BookingController extends Controller
     {
         return [
             'Yangi' => 'Yangi',
+            "Yangi so'rov" => "Yangi so'rov",
             'Tasdiqlangan' => 'Tasdiqlangan',
+            'Avans olingan' => 'Avans olingan',
             'Tayyorlanmoqda' => 'Tayyorlanmoqda',
+            "Tadbir bo'lib o'tdi" => "Tadbir bo'lib o'tdi",
+            'Yakunlandi' => 'Yakunlandi',
             'Otkazildi' => 'Otkazildi',
             'Bekor qilindi' => 'Bekor qilindi',
         ];

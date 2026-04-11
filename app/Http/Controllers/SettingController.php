@@ -4,98 +4,107 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\Settings\UpdatePasswordRequest;
 use App\Http\Requests\Settings\UpdateSettingsRequest;
-use App\Mail\NotificationEmailConnectedMail;
+use App\Models\BusinessSubscription;
+use App\Models\MediaAsset;
 use App\Models\Setting;
+use App\Services\Billing\TelegramLinkingService;
+use App\Services\Billing\TelegramSettingsService;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Facades\Storage;
-use Throwable;
 use Illuminate\View\View;
 
 class SettingController extends Controller
 {
-    public function edit(): View
+    public function edit(TelegramLinkingService $telegramLinking, TelegramSettingsService $telegramSettings): View
     {
+        $user = auth()->user();
+        $activeSection = in_array(request('section'), ['business', 'notifications', 'integrations', 'security'], true)
+            ? request('section')
+            : 'business';
+        $subscription = null;
+        $venue = $user?->venueConnection;
+
+        if ($user && ! $user->isSuperAdmin() && $user->venue_connection_id) {
+            $subscription = BusinessSubscription::query()
+                ->with('plan')
+                ->where('venue_connection_id', $user->venue_connection_id)
+                ->latest('starts_at')
+                ->first();
+        }
+
+        if ($venue) {
+            $venue = $telegramLinking->ensureLinkToken($venue);
+        }
+
         return view('settings.edit', [
-            'setting' => Setting::current(),
-            'adminUser' => auth()->user(),
+            'setting' => Setting::currentFor($user),
+            'adminUser' => $user,
+            'subscription' => $subscription,
+            'activeSection' => $activeSection,
+            'telegramVenue' => $venue,
+            'telegramLink' => $venue ? $telegramLinking->deepLinkForVenue($venue) : null,
+            'telegramMask' => $venue ? $telegramLinking->maskChatId($venue->telegram_chat_id) : 'Ulanmagan',
+            'telegramConfigured' => $telegramSettings->enabled(),
+            'telegramBotUsername' => $telegramSettings->all()['bot_username'] ?? null,
         ]);
     }
 
     public function update(UpdateSettingsRequest $request): RedirectResponse
     {
-        $setting = Setting::current();
-        $previousNotificationEmail = trim((string) ($setting->notification_email ?? ''));
+        $section = in_array($request->query('section'), ['business', 'notifications', 'integrations', 'security'], true)
+            ? $request->query('section')
+            : 'business';
+        $setting = Setting::currentFor($request->user());
         $data = $request->validated();
 
         if ($request->hasFile('logo')) {
-            if ($setting->logo_path) {
-                Storage::disk('public')->delete($setting->logo_path);
-            }
+            $asset = MediaAsset::replace(
+                key: 'brand_logo',
+                file: $request->file('logo'),
+                directory: 'branding/logo',
+                userId: $request->user()?->getKey(),
+                ownerUserId: $request->user()?->getKey(),
+                label: 'Logo',
+                altText: 'Brend logotipi',
+            );
 
-            $data['logo_path'] = $request->file('logo')->store('branding', 'public');
+            $data['logo_path'] = null;
+            $data['logo_media_file_id'] = $asset->media_file_id;
         }
 
         if ($request->hasFile('favicon')) {
-            if ($setting->favicon_path) {
-                Storage::disk('public')->delete($setting->favicon_path);
-            }
+            $asset = MediaAsset::replace(
+                key: 'brand_favicon',
+                file: $request->file('favicon'),
+                directory: 'branding/favicon',
+                userId: $request->user()?->getKey(),
+                ownerUserId: $request->user()?->getKey(),
+                label: 'Favicon',
+                altText: 'Favicon',
+            );
 
-            $data['favicon_path'] = $request->file('favicon')->store('branding/favicons', 'public');
+            $data['favicon_path'] = null;
+            $data['favicon_media_file_id'] = $asset->media_file_id;
         }
 
         unset($data['logo']);
         unset($data['favicon']);
 
         $setting->update($data);
+        Setting::forgetResolved($request->user()?->getKey());
         Log::channel('audit')->info('Settings updated.', [
             'user_id' => $request->user()?->getKey(),
             'ip' => $request->ip(),
-            'notification_email_changed' => $previousNotificationEmail !== (string) ($setting->notification_email ?? ''),
         ]);
 
-        $currentNotificationEmail = trim((string) ($setting->notification_email ?? ''));
-
-        if ($currentNotificationEmail !== '') {
-            if (! $this->canSendRealEmails()) {
-                return redirect()
-                    ->route('settings.edit')
-                    ->with('error', "Sozlamalar saqlandi, lekin email hali haqiqiy manzilga yuborilmaydi. Hozirgi `MAIL_MAILER` qiymati `".config('mail.default')."`.");
-            }
-
-            try {
-                Mail::to($currentNotificationEmail)->send(new NotificationEmailConnectedMail(
-                    restaurantName: $setting->restaurant_name,
-                    notificationEmail: $currentNotificationEmail,
-                    contactPhone: $setting->contact_phone,
-                ));
-            } catch (Throwable $exception) {
-                Log::channel('auth')->warning('Notification email confirmation failed.', [
-                    'user_id' => $request->user()?->getKey(),
-                    'ip' => $request->ip(),
-                    'email' => $currentNotificationEmail,
-                    'exception' => $exception->getMessage(),
-                ]);
-
-                return redirect()
-                    ->route('settings.edit')
-                    ->with('error', 'Email saqlandi, lekin xabar yuborilmadi. MAIL sozlamalarini tekshiring.');
-            }
-        }
-
-        $message = $currentNotificationEmail !== ''
-            ? ($currentNotificationEmail !== $previousNotificationEmail
-                ? 'Sozlamalar saqlandi va notification emailga ulanish xabari yuborildi.'
-                : 'Sozlamalar saqlandi va notification emailga xabar yuborildi.')
-            : 'Sozlamalar muvaffaqiyatli yangilandi.';
-
-        return redirect()->route('settings.edit')->with('success', $message);
+        return redirect()->route('settings.edit', ['section' => $section])->with('success', 'Sozlamalar muvaffaqiyatli yangilandi.');
     }
 
     public function updatePassword(UpdatePasswordRequest $request): RedirectResponse
     {
+        $section = in_array($request->query('section'), ['business', 'notifications', 'integrations', 'security'], true)
+            ? $request->query('section')
+            : 'security';
         $data = $request->validated();
 
         $user = $request->user();
@@ -108,13 +117,6 @@ class SettingController extends Controller
             'ip' => $request->ip(),
         ]);
 
-        return redirect()->route('settings.edit')->with('success', 'Admin paroli muvaffaqiyatli yangilandi.');
-    }
-
-    private function canSendRealEmails(): bool
-    {
-        $mailer = (string) Config::get('mail.default');
-
-        return ! in_array($mailer, ['log', 'array'], true);
+        return redirect()->route('settings.edit', ['section' => $section])->with('success', 'Admin paroli muvaffaqiyatli yangilandi.');
     }
 }

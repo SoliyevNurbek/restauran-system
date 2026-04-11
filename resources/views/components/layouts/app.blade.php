@@ -1,3 +1,5 @@
+@props(['title' => null, 'pageTitle' => null, 'pageSubtitle' => null])
+
 <!doctype html>
 <html lang="uz" class="h-full">
 <head>
@@ -5,11 +7,64 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{{ $title ?? 'Restoran CRM' }}</title>
-    <link rel="icon" type="image/png" href="{{ !empty($appSetting?->favicon_path) ? asset('storage/'.$appSetting->favicon_path) : (!empty($appSetting?->logo_path) ? asset('storage/'.$appSetting->logo_path) : asset('Javohirlogo.png')) }}">
-    <link rel="shortcut icon" href="{{ !empty($appSetting?->favicon_path) ? asset('storage/'.$appSetting->favicon_path) : (!empty($appSetting?->logo_path) ? asset('storage/'.$appSetting->logo_path) : asset('Javohirlogo.png')) }}">
+    @php
+        $resolvedSetting = \Illuminate\Support\Facades\Schema::hasTable('settings')
+            ? \App\Models\Setting::currentFor(auth()->user())
+            : null;
+        $resolvedMediaAssets = \Illuminate\Support\Facades\Schema::hasTable('media_assets')
+            ? \App\Models\MediaAsset::keyed(auth()->user())
+            : collect();
+    $brandLogo = $resolvedMediaAssets->get('brand_logo');
+    $brandFavicon = $resolvedMediaAssets->get('brand_favicon');
+    $brandLogoUrl = $brandLogo?->url() ?: $resolvedSetting?->logoUrl();
+    $brandFaviconUrl = $brandFavicon?->url()
+            ?: $resolvedSetting?->faviconUrl()
+            ?: $brandLogoUrl;
+    $tenantSubscription = null;
+    $tenantRoleLabel = match (auth()->user()?->role) {
+        'superadmin' => 'Superadmin',
+        'admin' => 'Egasi',
+        default => auth()->user()?->role ? ucfirst((string) auth()->user()?->role) : 'Operator',
+    };
+
+    if (auth()->check()
+        && ! auth()->user()?->isSuperAdmin()
+        && \Illuminate\Support\Facades\Schema::hasTable('business_subscriptions')
+        && \Illuminate\Support\Facades\Schema::hasTable('subscription_plans')
+    ) {
+        $tenantSubscription = \App\Models\BusinessSubscription::query()
+            ->with('plan')
+            ->where('venue_connection_id', auth()->user()?->venue_connection_id)
+            ->latest('starts_at')
+            ->first();
+    }
+
+    $subscriptionStatusLabel = match ($tenantSubscription?->status) {
+        'trial' => 'Trial',
+        'active' => 'Active',
+        'expired' => 'Expired',
+        'suspended' => 'Suspended',
+        'canceled' => 'Canceled',
+        default => "Noma'lum",
+    };
+    $subscriptionStatusClasses = match ($tenantSubscription?->status) {
+        'trial' => 'bg-blue-100 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300',
+        'active' => 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300',
+        'expired' => 'bg-red-100 text-red-700 dark:bg-red-950/40 dark:text-red-300',
+        'suspended' => 'bg-amber-100 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300',
+        'canceled' => 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300',
+        default => 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300',
+    };
+    $nextBillingDate = $tenantSubscription?->renews_at ?? $tenantSubscription?->trial_ends_at ?? $tenantSubscription?->expires_at;
+    $remainingDays = $nextBillingDate ? max(now()->startOfDay()->diffInDays($nextBillingDate->copy()->startOfDay(), false), 0) : null;
+@endphp
+    @if($brandFaviconUrl)
+        <link rel="icon" type="image/png" href="{{ $brandFaviconUrl }}">
+        <link rel="shortcut icon" href="{{ $brandFaviconUrl }}">
+    @endif
     <script>
         (() => {
-            const theme = localStorage.getItem('theme') || '{{ $appSetting->theme_preference ?? 'light' }}';
+            const theme = localStorage.getItem('theme') || '{{ $resolvedSetting->theme_preference ?? 'light' }}';
             if (theme === 'dark') document.documentElement.classList.add('dark');
         })();
     </script>
@@ -180,67 +235,100 @@
 @php
     $navGroups = [
         [
-            'label' => 'Restoran CRM',
+            'label' => 'Dashboard',
             'group_icon' => 'layout-dashboard',
             'items' => [
                 ['route' => 'dashboard', 'label' => 'Bosh sahifa', 'icon' => 'layout-dashboard'],
             ],
         ],
         [
-            'label' => 'Restoran Ombori',
+            'label' => "To'y boshqaruvi",
+            'key' => 'events',
+            'group_icon' => 'calendar-days',
+            'items' => [
+                ['route' => 'bookings.index', 'label' => 'Bronlar', 'icon' => 'clipboard-list'],
+                ['route' => 'calendar.index', 'label' => 'Kalendar', 'icon' => 'calendar-days'],
+                ['route' => 'clients.index', 'label' => 'Mijozlar', 'icon' => 'users'],
+                ['route' => 'halls.index', 'label' => 'Zallar', 'icon' => 'building-2'],
+                ['route' => 'event-types.index', 'label' => 'Tadbir turlari', 'icon' => 'party-popper'],
+                ['route' => 'wedding-packages.index', 'label' => "To'y paketlari", 'icon' => 'gift'],
+            ],
+        ],
+        [
+            'label' => 'Moliya',
+            'key' => 'finance',
+            'group_icon' => 'wallet',
+            'items' => [
+                ['route' => 'payments.index', 'label' => "Mijoz to'lovlari", 'icon' => 'wallet'],
+                ['route' => 'purchases.index', 'label' => 'Kirimlar', 'icon' => 'package-plus'],
+                ['route' => 'inventory-expenses.index', 'label' => 'Xarajatlar', 'icon' => 'receipt-text'],
+                ['route' => 'suppliers.index', 'label' => 'Qarzdorlik va balans', 'icon' => 'hand-coins'],
+                ['route' => 'billing.payments.index', 'label' => "To'lovlar", 'icon' => 'credit-card'],
+                ['route' => 'billing.subscriptions.index', 'label' => 'Obunalar', 'icon' => 'repeat'],
+                ['route' => 'billing.plans.index', 'label' => 'Tariflar', 'icon' => 'layers-3'],
+            ],
+        ],
+        [
+            'label' => 'Ombor',
             'key' => 'inventory',
             'group_icon' => 'package-search',
             'items' => [
+                ['route' => 'products.index', 'label' => 'Mahsulotlar', 'icon' => 'package-search'],
+                ['route' => 'inventory-expense-categories.index', 'label' => 'Kategoriyalar', 'icon' => 'folder-tree'],
+                ['route' => 'booking-usage-items.index', 'label' => 'Ombor harakati', 'icon' => 'arrow-left-right'],
+                ['route' => 'dashboard', 'label' => 'Minimal qoldiq', 'icon' => 'triangle-alert', 'params' => ['focus' => 'low-stock']],
                 ['route' => 'suppliers.index', 'label' => 'Ta\'minotchilar', 'icon' => 'truck'],
-                ['route' => 'products.index', 'label' => 'Asosiy mahsulotlar', 'icon' => 'package-search'],
-                ['route' => 'booking-usage-items.index', 'label' => 'Bron mahsulot sarfi', 'icon' => 'clipboard-check'],
-                ['route' => 'purchases.index', 'label' => 'Kirimlar', 'icon' => 'package-plus'],
-                ['route' => 'inventory-expenses.index', 'label' => 'Restoran xarajatlari', 'icon' => 'wallet-cards'],
-                ['route' => 'inventory-expense-categories.index', 'label' => 'Restoran kategoriya', 'icon' => 'folder-tree'],
             ],
         ],
         [
-            'label' => 'Toyxona Modullari',
-            'key' => 'legacy',
-            'group_icon' => 'building-2',
+            'label' => 'Xodimlar',
+            'key' => 'staff',
+            'group_icon' => 'badge-check',
             'items' => [
-                ['route' => 'bookings.index', 'label' => 'Bronlar', 'icon' => 'clipboard-list'],
-                ['route' => 'event-types.index', 'label' => 'Tadbirlar', 'icon' => 'party-popper'],
-                ['route' => 'halls.index', 'label' => 'Zallar', 'icon' => 'building-2'],
-                ['route' => 'wedding-packages.index', 'label' => 'Toy paketlari', 'icon' => 'gift'],
-                ['route' => 'clients.index', 'label' => 'Mijozlar', 'icon' => 'users'],
-                ['route' => 'payments.index', 'label' => 'Tolovlar', 'icon' => 'wallet'],
-                ['route' => 'employees.index', 'label' => 'Xodimlar', 'icon' => 'badge-check'],
-                ['route' => 'calendar.index', 'label' => 'Kalendar', 'icon' => 'calendar-days'],
-            ],
-        ],
-        [
-            'label' => 'Toyxona Xarajatlari',
-            'key' => 'legacy_expenses',
-            'group_icon' => 'receipt-text',
-            'items' => [
-                ['route' => 'expenses.kitchen.index', 'label' => 'Oshxona', 'icon' => 'chef-hat'],
-                ['route' => 'expenses.event.index', 'label' => 'Tadbir', 'icon' => 'sparkles'],
-                ['route' => 'expenses.fixed.index', 'label' => 'Doimiy', 'icon' => 'receipt-text'],
-                ['route' => 'expenses.categories.index', 'label' => 'Kategoriyalar', 'icon' => 'folder-tree'],
+                ['route' => 'employees.index', 'label' => 'Foydalanuvchilar', 'icon' => 'users'],
+                ['route' => 'employees.index', 'label' => 'Rollar va ruxsatlar', 'icon' => 'shield-check', 'params' => ['tab' => 'roles']],
+                ['route' => 'employees.index', 'label' => 'Faollik', 'icon' => 'activity', 'params' => ['tab' => 'activity']],
             ],
         ],
         [
             'label' => 'Tahlil',
-            'key' => 'analysis',
-            'group_icon' => 'bar-chart-3',
             'items' => [
-                ['route' => 'reports.index', 'label' => 'Hisobotlar', 'icon' => 'bar-chart-3'],
-                ['route' => 'settings.edit', 'label' => 'Sozlamalar', 'icon' => 'settings'],
+                ['route' => 'reports.index', 'label' => 'Tahlil', 'icon' => 'bar-chart-3'],
+            ],
+        ],
+        [
+            'label' => 'Sozlamalar',
+            'items' => [
+                ['route' => 'settings.edit', 'label' => 'Sozlamalar', 'icon' => 'settings-2'],
             ],
         ],
     ];
+    $pageSubtitleText = $pageSubtitle ?? match (true) {
+        request()->routeIs('dashboard') => "Bugungi ishlar, moliyaviy oqim va ustuvor vazifalar bir joyda.",
+        request()->routeIs('bookings.*') => "Bronlar, statuslar va mijoz bilan bog'liq operatsiyalar nazorati.",
+        request()->routeIs('calendar.*') => "Kalendar kesimida bandlik va tadbir yuklamasi nazorati.",
+        request()->routeIs('clients.*') => "Mijozlar bazasi, tarix va aloqalar ko'rinishi.",
+        request()->routeIs('halls.*') => "Zallar, sig'im va bandlik holatini boshqarish paneli.",
+        request()->routeIs('wedding-packages.*') => "Paketlar va xizmat takliflarini boshqarish maydoni.",
+        request()->routeIs('payments.*') => "To'lov oqimi, qarzdorlik va tushum kesimi.",
+        request()->routeIs('purchases.*') => "Kirim hujjatlari va omborga tushgan mahsulotlar nazorati.",
+        request()->routeIs('inventory-expenses.*') => "Xarajatlar, sarf va budjet intizomi ko'rinishi.",
+        request()->routeIs('suppliers.*') => "Ta'minotchilar, balans va tranzaksiyalar holati.",
+        request()->routeIs('billing.payments.*') => "SaaS billing to'lovlari, invoice va provider holati.",
+        request()->routeIs('billing.subscriptions.*') || request()->routeIs('subscriptions.index') => "Joriy obuna, renewal va subscription tarixi.",
+        request()->routeIs('billing.plans.*') || request()->routeIs('plans.index') => "Basic, Pro va Premium tariflarini boshqarish maydoni.",
+        request()->routeIs('products.*') => "Ombordagi mahsulotlar, qoldiq va minimal limitlar.",
+        request()->routeIs('booking-usage-items.*') => "Bronlar bo'yicha mahsulot sarfi va chiqim harakati.",
+        request()->routeIs('reports.*') => "Trendlar, foyda va asosiy biznes ko'rsatkichlari.",
+        request()->routeIs('settings.*') => "Toyxona brendi, aloqa va panel sozlamalari.",
+        default => "Toyxona uchun premium boshqaruv paneli."
+    };
 @endphp
 
 <div class="min-h-screen" x-data="{
     sidebarOpen:false,
     activeGroup:
-        {{ request()->routeIs('suppliers.*') || request()->routeIs('products.*') || request()->routeIs('booking-usage-items.*') || request()->routeIs('purchases.*') || request()->routeIs('inventory-expenses.*') || request()->routeIs('inventory-expense-categories.*') ? '\'inventory\'' : (request()->routeIs('reports.*') || request()->routeIs('settings.*') ? '\'analysis\'' : (request()->routeIs('bookings.*') || request()->routeIs('event-types.*') || request()->routeIs('halls.*') || request()->routeIs('wedding-packages.*') || request()->routeIs('clients.*') || request()->routeIs('payments.*') || request()->routeIs('employees.*') || request()->routeIs('calendar.*') ? '\'legacy\'' : (request()->routeIs('expenses.kitchen.*') || request()->routeIs('expenses.event.*') || request()->routeIs('expenses.fixed.*') || request()->routeIs('expenses.categories.*') ? '\'legacy_expenses\'' : 'null'))) }},
+        {{ request()->routeIs('bookings.*') || request()->routeIs('event-types.*') || request()->routeIs('halls.*') || request()->routeIs('wedding-packages.*') || request()->routeIs('clients.*') || request()->routeIs('calendar.*') ? '\'events\'' : (request()->routeIs('payments.*') || request()->routeIs('purchases.*') || request()->routeIs('inventory-expenses.*') || request()->routeIs('suppliers.*') || request()->routeIs('billing.*') || request()->routeIs('plans.index') || request()->routeIs('subscriptions.index') ? '\'finance\'' : (request()->routeIs('products.*') || request()->routeIs('booking-usage-items.*') || request()->routeIs('inventory-expense-categories.*') ? '\'inventory\'' : (request()->routeIs('employees.*') ? '\'staff\'' : (request()->routeIs('reports.*') ? '\'analytics\'' : (request()->routeIs('settings.*') ? '\'settings\'' : 'null'))))) }},
     scrollToActiveGroup() {
         if (!this.activeGroup) return;
         this.$nextTick(() => this.$refs[`group-${this.activeGroup}`]?.scrollIntoView({ block: 'nearest', behavior: 'smooth' }));
@@ -261,18 +349,18 @@
            x-transition:leave-end="-translate-x-full opacity-80"
            :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'">
         <div class="px-4 pb-3 pt-4 sm:px-5 sm:pt-5">
-            <div class="flex h-[78px] items-center justify-center gap-4 rounded-2xl border border-slate-200 bg-white px-4 shadow-sm dark:border-slate-800 dark:bg-slate-950/70 sm:h-[84px]">
+            <div class="flex h-[92px] items-center justify-center gap-4 rounded-[28px] border border-slate-200 bg-white px-4 shadow-sm dark:border-slate-800 dark:bg-slate-950/70 sm:h-[96px]">
                 <div class="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-full border border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-900 sm:h-16 sm:w-16">
-                    @if(!empty($appSetting?->logo_path))
-                        <img src="{{ asset('storage/'.$appSetting->logo_path) }}" alt="Logo" class="h-full w-full object-cover">
+                    @if($brandLogoUrl)
+                        <img src="{{ $brandLogoUrl }}" alt="Logo" class="h-full w-full object-cover">
                     @else
-                        <img src="{{ asset('Javohirlogo.png') }}" alt="Logo" class="h-full w-full object-cover">
+                        <span class="text-sm font-bold text-primary-700 dark:text-primary-300">MR</span>
                     @endif
                 </div>
 
                 <div class="min-w-0 flex-1">
-                    <p class="truncate text-base font-semibold leading-tight text-slate-900 dark:text-white">{{ $appSetting->restaurant_name ?? 'Restoran CRM' }}</p>
-                    <p class="truncate pt-1 text-sm text-slate-500">Boshqaruv paneli</p>
+                    <p class="truncate text-base font-semibold leading-tight text-slate-900 dark:text-white">{{ $resolvedSetting?->restaurant_name ?: 'MyRestaurant_SN' }}</p>
+                    <p class="truncate pt-1 text-sm text-slate-500">Toyxona operatsion paneli</p>
                 </div>
             </div>
         </div>
@@ -306,7 +394,7 @@
                                 class="space-y-1.5 overflow-hidden pt-2"
                             >
                                 @foreach($group['items'] as $item)
-                                    <a href="{{ route($item['route']) }}"
+                                    <a href="{{ route($item['route'], $item['params'] ?? []) }}"
                                        @click="if (window.innerWidth < 1024) sidebarOpen = false"
                                        class="group relative flex items-center gap-3 overflow-hidden rounded-2xl px-3 py-2.5 text-sm font-medium transition-all duration-200 {{ request()->routeIs(str_replace('.index', '.*', $item['route'])) || request()->routeIs($item['route']) ? 'bg-primary-600 text-white shadow-soft ring-1 ring-primary-500/30' : 'text-slate-600 hover:bg-slate-100 hover:shadow-sm dark:text-slate-300 dark:hover:bg-slate-900' }}">
                                         <span class="absolute inset-y-2 left-1 w-1 rounded-full {{ request()->routeIs(str_replace('.index', '.*', $item['route'])) || request()->routeIs($item['route']) ? 'bg-white/90' : 'bg-transparent group-hover:bg-primary-200 dark:group-hover:bg-primary-800' }}"></span>
@@ -319,7 +407,7 @@
                             </div>
                         @else
                             @foreach($group['items'] as $item)
-                                <a href="{{ route($item['route']) }}"
+                                <a href="{{ route($item['route'], $item['params'] ?? []) }}"
                                    @click="if (window.innerWidth < 1024) sidebarOpen = false"
                                    class="group relative flex items-center gap-3 overflow-hidden rounded-2xl px-3 py-2.5 text-sm font-medium transition-all duration-200 {{ request()->routeIs(str_replace('.index', '.*', $item['route'])) || request()->routeIs($item['route']) ? 'bg-primary-600 text-white shadow-soft ring-1 ring-primary-500/30' : 'text-slate-600 hover:bg-slate-100 hover:shadow-sm dark:text-slate-300 dark:hover:bg-slate-900' }}">
                                     <span class="absolute inset-y-2 left-1 w-1 rounded-full {{ request()->routeIs(str_replace('.index', '.*', $item['route'])) || request()->routeIs($item['route']) ? 'bg-white/90' : 'bg-transparent group-hover:bg-primary-200 dark:group-hover:bg-primary-800' }}"></span>
@@ -344,12 +432,36 @@
                         <i data-lucide="menu" class="h-5 w-5"></i>
                     </button>
                     <div class="min-w-0">
-                        <h1 class="truncate text-lg font-semibold text-slate-900 dark:text-white">{{ $pageTitle ?? 'Panel' }}</h1>
-                        <p class="text-xs text-slate-500">Restoran uchun kirim, xarajat va ta'minot nazorati</p>
+                        <div class="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">
+                            <span>Admin panel</span>
+                            <span class="h-1 w-1 rounded-full bg-slate-300"></span>
+                            <span>{{ now()->translatedFormat('d M Y') }}</span>
+                        </div>
+                        <h1 class="mt-1 truncate text-xl font-semibold text-slate-900 dark:text-white">{{ $pageTitle ?? 'Panel' }}</h1>
+                        <p class="mt-1 text-sm text-slate-500">{{ $pageSubtitleText }}</p>
                     </div>
                 </div>
 
                 <div class="ml-auto flex shrink-0 items-start gap-2 sm:items-center sm:gap-3">
+                    @if($tenantSubscription)
+                        <div class="hidden rounded-[24px] border border-slate-200 bg-slate-50 px-4 py-3 text-left shadow-sm dark:border-slate-800 dark:bg-slate-950/60 xl:block">
+                            <div class="flex items-center gap-2">
+                                <i data-lucide="badge-check" class="h-4 w-4 text-slate-500"></i>
+                                <p class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Tarif</p>
+                            </div>
+                            <div class="mt-2 flex items-center gap-2">
+                                <p class="text-sm font-semibold text-slate-900 dark:text-white">{{ $tenantSubscription->plan?->name ?? 'Basic' }}</p>
+                                <span class="rounded-full px-2 py-1 text-[11px] font-semibold {{ $subscriptionStatusClasses }}">{{ $subscriptionStatusLabel }}</span>
+                            </div>
+                            <p class="mt-1 text-xs text-slate-500">
+                                Keyingi to'lov: {{ $nextBillingDate?->format('d M Y') ?? "Noma'lum" }}
+                                @if(! is_null($remainingDays))
+                                    | {{ $remainingDays }} kun
+                                @endif
+                            </p>
+                        </div>
+                    @endif
+
                     <button id="themeToggle" type="button" class="rounded-xl border border-slate-200 p-2 text-slate-500 transition hover:bg-slate-100 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800">
                         <i data-lucide="moon" class="h-4 w-4 dark:hidden"></i>
                         <i data-lucide="sun" class="hidden h-4 w-4 dark:block"></i>
@@ -357,12 +469,12 @@
 
                     <div class="hidden text-right md:block">
                         <p class="text-sm font-semibold text-slate-900 dark:text-white">{{ auth()->user()?->name ?? 'Foydalanuvchi' }}</p>
-                        <p class="text-xs text-slate-500">{{ auth()->user()?->username ?? 'guest' }}</p>
+                        <p class="text-xs text-slate-500">{{ $tenantRoleLabel }} | {{ auth()->user()?->username ?? 'guest' }}</p>
                     </div>
 
                     <form method="POST" action="{{ route('logout') }}">
                         @csrf
-                        <button class="rounded-xl bg-slate-900 px-3 py-2 text-sm font-semibold text-white transition hover:bg-slate-700 dark:bg-white dark:text-slate-950 dark:hover:bg-slate-200 sm:px-4">Chiqish</button>
+                        <button class="rounded-2xl bg-slate-900 px-3 py-2 text-sm font-semibold text-white transition hover:bg-slate-700 dark:bg-white dark:text-slate-950 dark:hover:bg-slate-200 sm:px-4">Chiqish</button>
                     </form>
                 </div>
             </div>

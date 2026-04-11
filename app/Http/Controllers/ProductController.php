@@ -3,16 +3,36 @@
 namespace App\Http\Controllers;
 
 use App\Models\Product;
+use App\Support\TenantContext;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
 class ProductController extends Controller
 {
-    public function index(): View
+    public function index(Request $request): View
     {
+        $search = trim((string) $request->string('q'));
+        $stockState = (string) $request->query('stock_state', '');
+
         return view('master-products.index', [
-            'products' => Product::latest()->take(5)->get(),
+            'products' => Product::query()
+                ->when($search !== '', function ($query) use ($search) {
+                    $query->where(function ($inner) use ($search) {
+                        $inner->where('name', 'like', "%{$search}%")
+                            ->orWhere('sku', 'like', "%{$search}%")
+                            ->orWhere('category', 'like', "%{$search}%")
+                            ->orWhere('subcategory', 'like', "%{$search}%");
+                    });
+                })
+                ->when($stockState === 'low', fn ($query) => $query->whereColumn('current_stock', '<=', 'minimum_stock'))
+                ->when($stockState === 'active', fn ($query) => $query->where('is_active', true))
+                ->when($stockState === 'inactive', fn ($query) => $query->where('is_active', false))
+                ->latest()
+                ->paginate(12)
+                ->withQueryString(),
+            'filters' => compact('search', 'stockState'),
         ]);
     }
 
@@ -71,11 +91,14 @@ class ProductController extends Controller
     private function validateProduct(Request $request, ?Product $product = null, bool $allowExistingSku = false): array
     {
         $skuRule = ['required', 'string', 'max:100'];
+        $tenantId = TenantContext::id();
 
         if ($product) {
-            $skuRule[] = 'unique:products,sku,'.$product->id;
+            $skuRule[] = Rule::unique('products', 'sku')
+                ->ignore($product->id)
+                ->where('venue_connection_id', $tenantId);
         } elseif (! $allowExistingSku) {
-            $skuRule[] = 'unique:products,sku';
+            $skuRule[] = Rule::unique('products', 'sku')->where('venue_connection_id', $tenantId);
         }
 
         return $request->validate([

@@ -5,11 +5,25 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{{ $title ?? 'Restoran boshqaruvi' }}</title>
-    <link rel="icon" type="image/png" href="{{ !empty($appSetting?->favicon_path) ? asset('storage/'.$appSetting->favicon_path) : (!empty($appSetting?->logo_path) ? asset('storage/'.$appSetting->logo_path) : asset('Javohirlogo.png')) }}">
-    <link rel="shortcut icon" href="{{ !empty($appSetting?->favicon_path) ? asset('storage/'.$appSetting->favicon_path) : (!empty($appSetting?->logo_path) ? asset('storage/'.$appSetting->logo_path) : asset('Javohirlogo.png')) }}">
+    @php
+        $resolvedSetting = \Illuminate\Support\Facades\Schema::hasTable('settings')
+            ? \App\Models\Setting::global()
+            : null;
+        $resolvedMediaAssets = \Illuminate\Support\Facades\Schema::hasTable('media_assets')
+            ? \App\Models\MediaAsset::keyed()
+            : collect();
+        $brandLogo = $resolvedMediaAssets->get('brand_logo');
+        $brandFavicon = $resolvedMediaAssets->get('brand_favicon');
+        $brandFaviconUrl = $brandFavicon?->url()
+            ?: ($resolvedSetting?->faviconUrl() ?: ($brandLogo?->url() ?: $resolvedSetting?->logoUrl()));
+    @endphp
+    @if($brandFaviconUrl)
+        <link rel="icon" type="image/png" href="{{ $brandFaviconUrl }}">
+        <link rel="shortcut icon" href="{{ $brandFaviconUrl }}">
+    @endif
     <script>
         (() => {
-            const theme = localStorage.getItem('theme') || '{{ $appSetting->theme_preference ?? 'light' }}';
+            const theme = localStorage.getItem('theme') || '{{ $resolvedSetting->theme_preference ?? 'light' }}';
             if (theme === 'dark') {
                 document.documentElement.classList.add('dark');
             }

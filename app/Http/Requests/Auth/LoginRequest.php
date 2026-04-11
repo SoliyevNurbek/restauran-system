@@ -14,14 +14,8 @@ class LoginRequest extends FormRequest
 
     protected function prepareForValidation(): void
     {
-        $username = trim((string) $this->input('username', ''));
-
-        if (filter_var($username, FILTER_VALIDATE_EMAIL)) {
-            $username = Str::lower($username);
-        }
-
         $this->merge([
-            'username' => $username,
+            'username' => Str::lower(trim((string) $this->input('username', ''))),
         ]);
     }
 
@@ -31,12 +25,7 @@ class LoginRequest extends FormRequest
             'username' => [
                 'required',
                 'string',
-                'max:255',
-                function (string $attribute, mixed $value, \Closure $fail): void {
-                    if (str_contains((string) $value, '@') && ! filter_var($value, FILTER_VALIDATE_EMAIL)) {
-                        $fail($this->genericMessage());
-                    }
-                },
+                'max:50',
             ],
             'password' => ['required', 'string', 'min:4', 'max:255'],
             'remember' => ['sometimes', 'boolean'],
@@ -79,6 +68,10 @@ class LoginRequest extends FormRequest
 
     public function genericMessage(): string
     {
-        return "Login yoki parol notog'ri";
+        return match ($this->query('lang', 'uz')) {
+            'ru' => 'Логин или пароль неверны',
+            'en' => 'Invalid login or password',
+            default => "Login yoki parol notog'ri",
+        };
     }
 }

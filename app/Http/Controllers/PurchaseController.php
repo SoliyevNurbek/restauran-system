@@ -5,9 +5,11 @@ namespace App\Http\Controllers;
 use App\Models\Product;
 use App\Models\Purchase;
 use App\Models\Supplier;
+use App\Support\TenantContext;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
 class PurchaseController extends Controller
@@ -95,12 +97,14 @@ class PurchaseController extends Controller
 
     private function validatePurchase(Request $request): array
     {
+        $tenantId = TenantContext::id();
+
         return $request->validate([
-            'supplier_id' => ['required', 'exists:suppliers,id'],
+            'supplier_id' => ['required', Rule::exists('suppliers', 'id')->where('venue_connection_id', $tenantId)],
             'purchase_date' => ['required', 'date'],
             'notes' => ['nullable', 'string', 'max:2000'],
             'items' => ['required', 'array', 'min:1'],
-            'items.*.product_id' => ['required', 'exists:products,id'],
+            'items.*.product_id' => ['required', Rule::exists('products', 'id')->where('venue_connection_id', $tenantId)],
             'items.*.quantity' => ['required', 'numeric', 'min:0.001'],
             'items.*.unit_price' => ['required', 'numeric', 'min:0'],
         ]);

@@ -9,10 +9,23 @@ use Illuminate\View\View;
 
 class ClientController extends Controller
 {
-    public function index(): View
+    public function index(Request $request): View
     {
+        $search = trim((string) $request->string('q'));
+
         return view('customers.index', [
-            'clients' => Client::withCount('bookings')->latest()->paginate(10),
+            'clients' => Client::withCount('bookings')
+                ->with(['bookings' => fn ($query) => $query->with('eventType')->latest('event_date')->take(1)])
+                ->when($search !== '', function ($query) use ($search) {
+                    $query->where(function ($inner) use ($search) {
+                        $inner->where('full_name', 'like', "%{$search}%")
+                            ->orWhere('phone', 'like', "%{$search}%");
+                    });
+                })
+                ->latest()
+                ->paginate(10)
+                ->withQueryString(),
+            'filters' => compact('search'),
         ]);
     }
 

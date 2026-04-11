@@ -3,10 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\Category;
+use App\Models\MediaFile;
 use App\Models\MenuItem;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
 
 class MenuItemController extends Controller
@@ -30,7 +30,8 @@ class MenuItemController extends Controller
         $data = $this->validateData($request);
 
         if ($request->hasFile('image')) {
-            $data['image_path'] = $request->file('image')->store('menu-items', 'public');
+            $data['image'] = null;
+            $data['image_media_file_id'] = MediaFile::createFromUpload($request->file('image'))->getKey();
         }
 
         unset($data['image']);
@@ -58,11 +59,9 @@ class MenuItemController extends Controller
         $data = $this->validateData($request);
 
         if ($request->hasFile('image')) {
-            if ($menuItem->image_path) {
-                Storage::disk('public')->delete($menuItem->image_path);
-            }
-
-            $data['image_path'] = $request->file('image')->store('menu-items', 'public');
+            MediaFile::query()->whereKey($menuItem->image_media_file_id)->delete();
+            $data['image'] = null;
+            $data['image_media_file_id'] = MediaFile::createFromUpload($request->file('image'))->getKey();
         }
 
         unset($data['image']);
@@ -74,9 +73,7 @@ class MenuItemController extends Controller
 
     public function destroy(MenuItem $menuItem): RedirectResponse
     {
-        if ($menuItem->image_path) {
-            Storage::disk('public')->delete($menuItem->image_path);
-        }
+        MediaFile::query()->whereKey($menuItem->image_media_file_id)->delete();
 
         $menuItem->delete();
 

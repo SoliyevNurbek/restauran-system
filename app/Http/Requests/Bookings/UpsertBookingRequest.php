@@ -2,7 +2,9 @@
 
 namespace App\Http\Requests\Bookings;
 
+use App\Support\TenantContext;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\Validator;
 
 class UpsertBookingRequest extends FormRequest
@@ -35,12 +37,14 @@ class UpsertBookingRequest extends FormRequest
 
     public function rules(): array
     {
+        $tenantId = TenantContext::id();
+
         return [
-            'client_id' => ['nullable', 'integer', 'exists:clients,id'],
-            'hall_id' => ['required', 'integer', 'exists:halls,id'],
-            'event_type_id' => ['required', 'integer', 'exists:event_types,id'],
-            'package_id' => ['nullable', 'integer', 'exists:wedding_packages,id'],
-            'package_gallery_image_id' => ['nullable', 'integer', 'exists:wedding_package_images,id'],
+            'client_id' => ['nullable', 'integer', Rule::exists('clients', 'id')->where('venue_connection_id', $tenantId)],
+            'hall_id' => ['required', 'integer', Rule::exists('halls', 'id')->where('venue_connection_id', $tenantId)],
+            'event_type_id' => ['required', 'integer', Rule::exists('event_types', 'id')->where('venue_connection_id', $tenantId)],
+            'package_id' => ['nullable', 'integer', Rule::exists('wedding_packages', 'id')->where('venue_connection_id', $tenantId)],
+            'package_gallery_image_id' => ['nullable', 'integer', Rule::exists('wedding_package_images', 'id')->where('venue_connection_id', $tenantId)],
             'event_date' => ['required', 'date'],
             'start_time' => ['required', 'regex:/^\d{2}:\d{2}(:\d{2})?$/'],
             'end_time' => ['required', 'regex:/^\d{2}:\d{2}(:\d{2})?$/'],
@@ -49,10 +53,10 @@ class UpsertBookingRequest extends FormRequest
             'currency' => ['required', 'in:UZS,USD'],
             'advance_amount' => ['nullable', 'numeric', 'min:0', 'max:999999999.99'],
             'payment_method' => ['required', 'in:Naqd,Karta,Bank o\'tkazma,Click,Payme,Boshqa'],
-            'status' => ['required', 'in:Yangi,Tasdiqlangan,Tayyorlanmoqda,Otkazildi,Bekor qilindi'],
+            'status' => ['required', 'in:Yangi,Yangi so\'rov,Tasdiqlangan,Avans olingan,Tayyorlanmoqda,Tadbir bo\'lib o\'tdi,Yakunlandi,Otkazildi,Bekor qilindi'],
             'notes' => ['nullable', 'string', 'max:2000'],
             'services' => ['nullable', 'array', 'max:50'],
-            'services.*.service_id' => ['required', 'integer', 'exists:services,id', 'distinct'],
+            'services.*.service_id' => ['required', 'integer', Rule::exists('services', 'id')->where('venue_connection_id', $tenantId), 'distinct'],
             'services.*.quantity' => ['required', 'integer', 'min:1', 'max:100000'],
         ];
     }

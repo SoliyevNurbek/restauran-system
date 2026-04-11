@@ -2,11 +2,19 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Booking;
+use App\Models\BookingService;
+use App\Models\Client;
+use App\Models\BusinessSubscription;
 use App\Models\Expense;
+use App\Models\Hall;
+use App\Models\Payment;
 use App\Models\Product;
 use App\Models\Purchase;
+use App\Models\SubscriptionPayment;
 use App\Models\Supplier;
 use Carbon\Carbon;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
@@ -19,26 +27,73 @@ class DashboardController extends Controller
         $today = Carbon::today();
         $monthStart = Carbon::now()->startOfMonth();
         $lowStockProducts = $this->lowStockProducts();
+        $tenantSubscription = auth()->check() ? BusinessSubscription::query()
+            ->with('plan')
+            ->where('venue_connection_id', auth()->user()?->venue_connection_id)
+            ->latest('starts_at')
+            ->first() : null;
+        $pendingBillingPayment = auth()->check() ? SubscriptionPayment::query()
+            ->with('plan')
+            ->where('venue_connection_id', auth()->user()?->venue_connection_id)
+            ->whereIn('status', ['pending', 'payment_details_sent', 'awaiting_proof', 'under_review'])
+            ->latest()
+            ->first() : null;
+        $todayBookings = Booking::query()->forDay($today)->count();
+        $upcomingBookings = Booking::query()
+            ->upcoming()
+            ->whereIn('status', ['Yangi', 'Tasdiqlangan', 'Tayyorlanmoqda'])
+            ->count();
+        $monthlyRevenue = (float) Payment::query()
+            ->whereBetween('payment_date', [$monthStart->toDateString(), now()->toDateString()])
+            ->sum('amount');
+        $monthlyExpenses = (float) Expense::query()
+            ->whereBetween('expense_date', [$monthStart->toDateString(), now()->toDateString()])
+            ->sum('amount');
+        $monthlyProfit = $monthlyRevenue - $monthlyExpenses;
+        $debtClients = Booking::query()
+            ->where('remaining_amount', '>', 0)
+            ->distinct('client_id')
+            ->count('client_id');
+        $activeBookings = Booking::query()
+            ->whereIn('status', ['Yangi', 'Tasdiqlangan', 'Tayyorlanmoqda'])
+            ->count();
 
         $stats = [
-            'todayPurchases' => (float) Purchase::whereDate('purchase_date', $today)->sum('total_amount'),
-            'monthPurchases' => (float) Purchase::whereBetween('purchase_date', [$monthStart->toDateString(), now()->toDateString()])->sum('total_amount'),
-            'monthExpenses' => (float) Expense::whereBetween('expense_date', [$monthStart->toDateString(), now()->toDateString()])->sum('amount'),
+            'todayBookings' => $todayBookings,
+            'upcomingBookings' => $upcomingBookings,
+            'monthlyRevenue' => $monthlyRevenue,
+            'monthlyExpenses' => $monthlyExpenses,
+            'monthlyProfit' => $monthlyProfit,
+            'debtClients' => $debtClients,
+            'activeBookings' => $activeBookings,
             'lowStockCount' => $lowStockProducts->count(),
-            'productCount' => Product::count(),
-            'supplierCount' => Supplier::count(),
         ];
 
-        $purchaseRows = Purchase::query()
-            ->selectRaw('DATE(purchase_date) as date_value, SUM(total_amount) as amount')
-            ->whereDate('purchase_date', '>=', $today->copy()->subDays(6))
-            ->groupBy(DB::raw('DATE(purchase_date)'))
+        $bookingRows = Booking::query()
+            ->selectRaw('DATE(event_date) as date_value, COUNT(*) as total')
+            ->whereDate('event_date', '>=', $today->copy()->subDays(6))
+            ->groupBy(DB::raw('DATE(event_date)'))
             ->orderBy('date_value')
             ->get()
             ->keyBy('date_value');
 
+        $paymentMonths = collect(range(5, 0))->reverse()->map(fn ($offset) => now()->subMonths($offset)->startOfMonth());
+        $monthlyChartLabels = [];
+        $monthlyChartRevenue = [];
+        $monthlyChartExpenses = [];
+
+        foreach ($paymentMonths as $month) {
+            $monthlyChartLabels[] = $month->translatedFormat('M');
+            $monthlyChartRevenue[] = (float) Payment::query()
+                ->whereBetween('payment_date', [$month->copy()->startOfMonth(), $month->copy()->endOfMonth()])
+                ->sum('amount');
+            $monthlyChartExpenses[] = (float) Expense::query()
+                ->whereBetween('expense_date', [$month->copy()->startOfMonth(), $month->copy()->endOfMonth()])
+                ->sum('amount');
+        }
+
         $expenseRows = Expense::query()
-            ->selectRaw('DATE(expense_date) as date_value, SUM(amount) as amount')
+            ->selectRaw('DATE(expense_date) as date_value, SUM(amount) as total')
             ->whereDate('expense_date', '>=', $today->copy()->subDays(6))
             ->groupBy(DB::raw('DATE(expense_date)'))
             ->orderBy('date_value')
@@ -46,15 +101,15 @@ class DashboardController extends Controller
             ->keyBy('date_value');
 
         $labels = [];
-        $purchaseValues = [];
+        $bookingValues = [];
         $expenseValues = [];
 
         for ($i = 6; $i >= 0; $i--) {
             $day = $today->copy()->subDays($i);
             $date = $day->toDateString();
             $labels[] = $day->format('d M');
-            $purchaseValues[] = isset($purchaseRows[$date]) ? (float) $purchaseRows[$date]->amount : 0;
-            $expenseValues[] = isset($expenseRows[$date]) ? (float) $expenseRows[$date]->amount : 0;
+            $bookingValues[] = isset($bookingRows[$date]) ? (int) $bookingRows[$date]->total : 0;
+            $expenseValues[] = isset($expenseRows[$date]) ? (float) $expenseRows[$date]->total : 0;
         }
 
         $supplierDebt = Supplier::query()
@@ -63,22 +118,118 @@ class DashboardController extends Controller
             ->get()
             ->sum->balance;
 
+        $upcomingEvents = Booking::query()
+            ->with(['client', 'hall', 'eventType', 'package'])
+            ->upcoming()
+            ->take(6)
+            ->get();
+
+        $latestPayments = Payment::query()
+            ->with('booking.client')
+            ->latest('payment_date')
+            ->take(6)
+            ->get();
+
+        $recentExpenses = Expense::query()
+            ->with('category')
+            ->latest('expense_date')
+            ->take(6)
+            ->get();
+
+        $topClients = Client::query()
+            ->withCount('bookings')
+            ->whereHas('bookings')
+            ->orderByDesc('bookings_count')
+            ->take(5)
+            ->get();
+
+        $topServices = BookingService::query()
+            ->join('services', 'services.id', '=', 'booking_services.service_id')
+            ->select('services.name', DB::raw('SUM(booking_services.quantity) as total_quantity'))
+            ->groupBy('services.id', 'services.name')
+            ->orderByDesc('total_quantity')
+            ->take(5)
+            ->get();
+
+        $hallOccupancy = Hall::query()
+            ->withCount(['bookings as monthly_bookings_count' => fn ($query) => $query
+                ->whereBetween('event_date', [$monthStart->toDateString(), now()->endOfMonth()->toDateString()])])
+            ->orderByDesc('monthly_bookings_count')
+            ->take(5)
+            ->get();
+
+        $urgentAlerts = $this->urgentAlerts($upcomingEvents, $lowStockProducts);
+
         return view('dashboard.index', [
             'stats' => $stats + ['supplierDebt' => $supplierDebt],
             'chartLabels' => $labels,
-            'purchaseValues' => $purchaseValues,
+            'bookingValues' => $bookingValues,
             'expenseValues' => $expenseValues,
+            'monthlyChartLabels' => $monthlyChartLabels,
+            'monthlyChartRevenue' => $monthlyChartRevenue,
+            'monthlyChartExpenses' => $monthlyChartExpenses,
             'latestPurchases' => Purchase::with(['supplier', 'items.product'])->latest('purchase_date')->take(6)->get(),
-            'latestExpenses' => Expense::with('category')->latest('expense_date')->take(6)->get(),
+            'latestPayments' => $latestPayments,
+            'recentExpenses' => $recentExpenses,
             'lowStockProducts' => $lowStockProducts->take(6),
             'lowStockProductsFull' => $lowStockProducts,
+            'upcomingEvents' => $upcomingEvents,
+            'topClients' => $topClients,
+            'topServices' => $topServices,
+            'hallOccupancy' => $hallOccupancy,
+            'urgentAlerts' => $urgentAlerts,
             'topSuppliers' => Supplier::query()
                 ->withSum('purchases', 'total_amount')
                 ->withSum('payments', 'amount')
                 ->orderByDesc('purchases_sum_total_amount')
                 ->take(6)
                 ->get(),
+            'tenantSubscription' => $tenantSubscription,
+            'pendingBillingPayment' => $pendingBillingPayment,
         ]);
+    }
+
+    private function urgentAlerts(Collection $upcomingEvents, Collection $lowStockProducts): Collection
+    {
+        $alerts = collect();
+
+        if ($upcomingEvents->isNotEmpty()) {
+            $nearest = $upcomingEvents->first();
+            $alerts->push([
+                'title' => 'Yaqin tadbir tayyor turishi kerak',
+                'description' => ($nearest->hall?->name ?? 'Zal').' / '.($nearest->client?->full_name ?? 'Mijoz'),
+                'badge' => optional($nearest->event_date)->format('d.m.Y'),
+                'status' => 'info',
+                'icon' => 'calendar-days',
+            ]);
+        }
+
+        if ($lowStockProducts->isNotEmpty()) {
+            $alerts->push([
+                'title' => 'Kam qolgan mahsulotlar bor',
+                'description' => $lowStockProducts->count().' ta pozitsiya qayta to‘ldirishni kutmoqda.',
+                'badge' => 'Ombor',
+                'status' => 'warning',
+                'icon' => 'triangle-alert',
+            ]);
+        }
+
+        $overdue = Booking::query()
+            ->where('remaining_amount', '>', 0)
+            ->whereDate('event_date', '<', now()->toDateString())
+            ->count();
+
+        if ($overdue > 0) {
+            $alerts->push([
+                'title' => 'Qarzdor bronlar mavjud',
+                'description' => $overdue.' ta bron bo‘yicha qolgan to‘lov yopilmagan.',
+                'badge' => 'Moliya',
+                'status' => 'danger',
+                'icon' => 'wallet-cards',
+            ]);
+        }
+
+        return $alerts;
     }
 
     public function exportLowStockWord(): BinaryFileResponse

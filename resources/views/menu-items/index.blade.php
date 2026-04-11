@@ -1,4 +1,4 @@
-<x-app-layout title="To'y paketlari" pageTitle="Toy paketlari">
+<x-app-layout title="To'y paketlari" pageTitle="To'y paketlari">
     <div class="mb-4 flex items-center justify-between">
         <h2 class="text-lg font-semibold">To'y paketlari</h2>
         <a href="{{ route('wedding-packages.create') }}" class="rounded-xl bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-700">Paket qo'shish</a>
@@ -20,8 +20,8 @@
                     <td class="px-4 py-3">
                         <div class="space-y-3">
                             <div class="flex items-center gap-3">
-                                @if($package->image)
-                                    <img src="{{ asset('storage/'.$package->image) }}" class="h-10 w-10 rounded-lg object-cover" alt="paket">
+                                @if($package->image_url)
+                                    <img src="{{ $package->image_url }}" class="h-10 w-10 rounded-lg object-cover" alt="paket">
                                 @else
                                     <div class="h-10 w-10 rounded-lg bg-slate-200 dark:bg-slate-700"></div>
                                 @endif
@@ -34,7 +34,7 @@
                             @if($package->images->isNotEmpty())
                                 <div class="mobile-wrap-strip flex gap-2 overflow-x-auto pb-1">
                                     @foreach($package->images as $galleryImage)
-                                        <img src="{{ asset('storage/'.$galleryImage->image_path) }}" class="h-16 w-24 shrink-0 rounded-xl object-cover" alt="{{ $package->name }}">
+                                        <img src="{{ $galleryImage->url() }}" class="h-16 w-24 shrink-0 rounded-xl object-cover" alt="{{ $package->name }}">
                                     @endforeach
                                 </div>
                             @endif

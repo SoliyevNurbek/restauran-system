@@ -4,8 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Models\Expense;
 use App\Models\ExpenseCategory;
+use App\Support\TenantContext;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
 class ExpenseController extends Controller
@@ -60,8 +62,10 @@ class ExpenseController extends Controller
 
     private function validateExpense(Request $request): array
     {
+        $tenantId = TenantContext::id();
+
         return $request->validate([
-            'expense_category_id' => ['nullable', 'exists:expense_categories,id'],
+            'expense_category_id' => ['nullable', Rule::exists('expense_categories', 'id')->where('venue_connection_id', $tenantId)],
             'title' => ['required', 'string', 'max:255'],
             'expense_date' => ['required', 'date'],
             'amount' => ['required', 'numeric', 'min:0'],

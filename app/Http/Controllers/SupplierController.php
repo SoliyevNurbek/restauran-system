@@ -10,14 +10,27 @@ use Illuminate\View\View;
 
 class SupplierController extends Controller
 {
-    public function index(): View
+    public function index(Request $request): View
     {
+        $search = trim((string) $request->string('q'));
+        $balance = (string) $request->query('balance', '');
+
         return view('suppliers.index', [
             'suppliers' => Supplier::query()
                 ->withSum('purchases', 'total_amount')
                 ->withSum('payments', 'amount')
+                ->when($search !== '', function ($query) use ($search) {
+                    $query->where(function ($inner) use ($search) {
+                        $inner->where('full_name', 'like', "%{$search}%")
+                            ->orWhere('phone', 'like', "%{$search}%")
+                            ->orWhere('company_name', 'like', "%{$search}%");
+                    });
+                })
+                ->when($balance === 'debt', fn ($query) => $query->whereRaw('(opening_balance + COALESCE((select sum(total_amount) from purchases where purchases.supplier_id = suppliers.id), 0) - COALESCE((select sum(amount) from supplier_payments where supplier_payments.supplier_id = suppliers.id), 0)) > 0'))
                 ->latest()
-                ->paginate(12),
+                ->paginate(12)
+                ->withQueryString(),
+            'filters' => compact('search', 'balance'),
         ]);
     }
 

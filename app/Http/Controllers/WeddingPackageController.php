@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\MediaFile;
 use App\Models\WeddingPackage;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
 
 class WeddingPackageController extends Controller
@@ -29,7 +29,8 @@ class WeddingPackageController extends Controller
         $data = $this->validateData($request);
 
         if ($request->hasFile('image')) {
-            $data['image'] = $request->file('image')->store('packages', 'public');
+            $data['image'] = null;
+            $data['image_media_file_id'] = MediaFile::createFromUpload($request->file('image'))->getKey();
         }
 
         $weddingPackage = WeddingPackage::create($data);
@@ -55,16 +56,16 @@ class WeddingPackageController extends Controller
     {
         $data = $this->validateData($request);
 
-        if ($request->boolean('remove_image') && $weddingPackage->image) {
-            Storage::disk('public')->delete($weddingPackage->image);
+        if ($request->boolean('remove_image') && $weddingPackage->image_media_file_id) {
+            MediaFile::query()->whereKey($weddingPackage->image_media_file_id)->delete();
             $data['image'] = null;
+            $data['image_media_file_id'] = null;
         }
 
         if ($request->hasFile('image')) {
-            if ($weddingPackage->image) {
-                Storage::disk('public')->delete($weddingPackage->image);
-            }
-            $data['image'] = $request->file('image')->store('packages', 'public');
+            MediaFile::query()->whereKey($weddingPackage->image_media_file_id)->delete();
+            $data['image'] = null;
+            $data['image_media_file_id'] = MediaFile::createFromUpload($request->file('image'))->getKey();
         }
 
         $weddingPackage->update($data);
@@ -76,12 +77,10 @@ class WeddingPackageController extends Controller
 
     public function destroy(WeddingPackage $weddingPackage): RedirectResponse
     {
-        if ($weddingPackage->image) {
-            Storage::disk('public')->delete($weddingPackage->image);
-        }
+        MediaFile::query()->whereKey($weddingPackage->image_media_file_id)->delete();
 
         foreach ($weddingPackage->images as $image) {
-            Storage::disk('public')->delete($image->image_path);
+            MediaFile::query()->whereKey($image->media_file_id)->delete();
         }
 
         $weddingPackage->delete();
@@ -115,9 +114,11 @@ class WeddingPackageController extends Controller
 
         foreach ($request->file('gallery_images') as $imageFile) {
             $nextSortOrder++;
+            $mediaFile = MediaFile::createFromUpload($imageFile);
 
             $weddingPackage->images()->create([
-                'image_path' => $imageFile->store('packages/gallery', 'public'),
+                'image_path' => $mediaFile->filename,
+                'media_file_id' => $mediaFile->getKey(),
                 'sort_order' => $nextSortOrder,
             ]);
         }
@@ -137,7 +138,7 @@ class WeddingPackageController extends Controller
         $images = $weddingPackage->images()->whereIn('id', $imageIds)->get();
 
         foreach ($images as $image) {
-            Storage::disk('public')->delete($image->image_path);
+            MediaFile::query()->whereKey($image->media_file_id)->delete();
             $image->delete();
         }
     }

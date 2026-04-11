@@ -135,7 +135,7 @@
     <table class="min-w-full text-sm" id="servicesTable">
         <thead class="bg-slate-50 dark:bg-slate-800/70">
         <tr>
-            <th class="px-3 py-2 text-left">Qoshimcha xizmatlar</th>
+            <th class="px-3 py-2 text-left">Qo'shimcha xizmatlar</th>
             <th class="px-3 py-2 text-left">Miqdor</th>
             <th class="px-3 py-2 text-left">Amal</th>
         </tr>
@@ -181,7 +181,7 @@
         'price' => (float) $package->price_per_person,
         'images' => $package->images->map(fn ($image) => [
             'id' => $image->id,
-            'url' => asset('storage/'.$image->image_path),
+            'url' => $image->url(),
         ])->values()->all(),
     ])->values()->all();
 @endphp

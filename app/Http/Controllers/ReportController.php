@@ -2,8 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Booking;
+use App\Models\BookingService;
 use App\Models\Expense;
 use App\Models\ExpenseCategory;
+use App\Models\Hall;
+use App\Models\Payment;
 use App\Models\Product;
 use App\Models\Purchase;
 use App\Models\Supplier;
@@ -17,6 +21,10 @@ class ReportController extends Controller
 {
     public function index(): View
     {
+        $activeTab = in_array(request('tab'), ['analytics', 'trends', 'occupancy', 'services'], true)
+            ? request('tab')
+            : 'analytics';
+
         $reportPeriods = [
             'daily' => $this->buildDailyReport(),
             'weekly' => $this->buildWeeklyReport(),
@@ -24,13 +32,77 @@ class ReportController extends Controller
             'half_year' => $this->buildHalfYearReport(),
             'yearly' => $this->buildYearlyReport(),
         ];
+        $monthStart = now()->startOfMonth();
+        $monthEnd = now()->endOfMonth();
+        $monthlyRevenue = (float) Payment::query()
+            ->whereBetween('payment_date', [$monthStart->toDateString(), now()->toDateString()])
+            ->sum('amount');
+        $monthlyExpenses = (float) Expense::query()
+            ->whereBetween('expense_date', [$monthStart->toDateString(), now()->toDateString()])
+            ->sum('amount');
+        $hallOccupancy = Hall::query()
+            ->withCount(['bookings as monthly_bookings_count' => fn ($query) => $query
+                ->whereBetween('event_date', [$monthStart->toDateString(), $monthEnd->toDateString()])])
+            ->orderByDesc('monthly_bookings_count')
+            ->take(6)
+            ->get();
+        $topServices = BookingService::query()
+            ->join('services', 'services.id', '=', 'booking_services.service_id')
+            ->select(
+                'services.name',
+                DB::raw('SUM(booking_services.quantity) as total_quantity'),
+                DB::raw('SUM(booking_services.total) as total_amount'),
+                DB::raw('COUNT(DISTINCT booking_services.booking_id) as booking_count')
+            )
+            ->groupBy('services.id', 'services.name')
+            ->orderByDesc('total_quantity')
+            ->take(8)
+            ->get();
+        $weekdayDensityMap = Booking::query()
+            ->selectRaw('WEEKDAY(event_date) as weekday_index, COUNT(*) as total')
+            ->whereBetween('event_date', [$monthStart->toDateString(), $monthEnd->toDateString()])
+            ->groupBy('weekday_index')
+            ->pluck('total', 'weekday_index');
+        $weekdayDensity = collect([
+            ['label' => 'Dush', 'index' => 0],
+            ['label' => 'Sesh', 'index' => 1],
+            ['label' => 'Chor', 'index' => 2],
+            ['label' => 'Pay', 'index' => 3],
+            ['label' => 'Jum', 'index' => 4],
+            ['label' => 'Shan', 'index' => 5],
+            ['label' => 'Yak', 'index' => 6],
+        ])->map(fn (array $day) => [
+            'label' => $day['label'],
+            'total' => (int) ($weekdayDensityMap[$day['index']] ?? 0),
+        ]);
+        $analyticsSummary = [
+            'totalRevenue' => (float) Payment::sum('amount'),
+            'monthlyRevenue' => $monthlyRevenue,
+            'monthlyExpenses' => $monthlyExpenses,
+            'netBalance' => $monthlyRevenue - $monthlyExpenses,
+            'activeBookings' => Booking::query()->whereIn('status', ['Yangi', 'Tasdiqlangan', 'Tayyorlanmoqda'])->count(),
+            'upcomingBookings' => Booking::query()->upcoming()->count(),
+            'debtBookings' => Booking::query()->where('remaining_amount', '>', 0)->count(),
+            'averageBookingValue' => (float) Booking::query()->avg('total_amount'),
+            'averageGuests' => (float) Booking::query()
+                ->whereBetween('event_date', [$monthStart->toDateString(), $monthEnd->toDateString()])
+                ->avg('guest_count'),
+        ];
+        $serviceSummary = [
+            'serviceCount' => $topServices->count(),
+            'serviceBookings' => (int) BookingService::query()->distinct('booking_id')->count('booking_id'),
+            'serviceQuantity' => (int) $topServices->sum('total_quantity'),
+            'serviceRevenue' => (float) $topServices->sum('total_amount'),
+        ];
 
         return view('reports.index', [
+            'activeTab' => $activeTab,
             'reportPeriods' => $reportPeriods,
             'totalPurchases' => (float) Purchase::sum('total_amount'),
             'totalExpenses' => (float) Expense::sum('amount'),
             'totalSuppliers' => Supplier::count(),
             'lowStockCount' => Product::whereColumn('current_stock', '<=', 'minimum_stock')->count(),
+            'analyticsSummary' => $analyticsSummary,
             'expenseByCategory' => ExpenseCategory::query()
                 ->leftJoin('expenses', 'expenses.expense_category_id', '=', 'expense_categories.id')
                 ->select('expense_categories.name', DB::raw('COALESCE(SUM(expenses.amount), 0) as total'))
@@ -51,6 +123,22 @@ class ReportController extends Controller
                 ->orderByDesc('purchases_sum_total_amount')
                 ->take(8)
                 ->get(),
+            'hallOccupancy' => $hallOccupancy,
+            'weekdayDensity' => $weekdayDensity,
+            'currentMonthBookings' => Booking::query()
+                ->whereBetween('event_date', [$monthStart->toDateString(), $monthEnd->toDateString()])
+                ->count(),
+            'avgGuestsPerBooking' => (float) Booking::query()
+                ->whereBetween('event_date', [$monthStart->toDateString(), $monthEnd->toDateString()])
+                ->avg('guest_count'),
+            'busiestHall' => $hallOccupancy->first(),
+            'upcomingEvents' => Booking::query()
+                ->with(['client', 'hall', 'eventType'])
+                ->upcoming()
+                ->take(5)
+                ->get(),
+            'topServices' => $topServices,
+            'serviceSummary' => $serviceSummary,
         ]);
     }
 
@@ -77,7 +165,7 @@ class ReportController extends Controller
             fn (Carbon $date) => $date->format('d M'),
             $purchaseMap,
             $expenseMap,
-            'So‘nggi 7 kun'
+            "So'nggi 7 kun"
         );
     }
 
@@ -107,7 +195,7 @@ class ReportController extends Controller
             fn (Carbon $date) => $date->format('d M'),
             $purchaseMap,
             $expenseMap,
-            'So‘nggi 8 hafta'
+            "So'nggi 8 hafta"
         );
     }
 
@@ -134,7 +222,7 @@ class ReportController extends Controller
             fn (Carbon $date) => $date->format('d M'),
             $purchaseMap,
             $expenseMap,
-            'So‘nggi 30 kun'
+            "So'nggi 30 kun"
         );
     }
 
@@ -162,7 +250,7 @@ class ReportController extends Controller
             fn (Carbon $date) => $date->translatedFormat('M Y'),
             $purchaseMap,
             $expenseMap,
-            'So‘nggi 6 oy'
+            "So'nggi 6 oy"
         );
     }
 
@@ -190,7 +278,7 @@ class ReportController extends Controller
             fn (Carbon $date) => $date->translatedFormat('M Y'),
             $purchaseMap,
             $expenseMap,
-            'So‘nggi 12 oy'
+            "So'nggi 12 oy"
         );
     }
 

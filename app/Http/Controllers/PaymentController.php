@@ -12,10 +12,25 @@ use Illuminate\View\View;
 
 class PaymentController extends Controller
 {
-    public function index(): View
+    public function index(\Illuminate\Http\Request $request): View
     {
+        $search = trim((string) $request->string('q'));
+        $method = (string) $request->query('method', '');
+
         return view('payments.index', [
-            'payments' => Payment::with('booking.client')->latest('payment_date')->paginate(12),
+            'payments' => Payment::with('booking.client', 'booking.hall')
+                ->when($search !== '', function ($query) use ($search) {
+                    $query->whereHas('booking', function ($booking) use ($search) {
+                        $booking->where('booking_number', 'like', "%{$search}%")
+                            ->orWhereHas('client', fn ($client) => $client->where('full_name', 'like', "%{$search}%"));
+                    });
+                })
+                ->when($method !== '', fn ($query) => $query->where('payment_method', $method))
+                ->latest('payment_date')
+                ->paginate(12)
+                ->withQueryString(),
+            'filters' => compact('search', 'method'),
+            'methods' => $this->methods(),
         ]);
     }
 

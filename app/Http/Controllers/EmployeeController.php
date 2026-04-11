@@ -9,10 +9,22 @@ use Illuminate\View\View;
 
 class EmployeeController extends Controller
 {
-    public function index(): View
+    public function index(Request $request): View
     {
+        $search = trim((string) $request->string('q'));
+        $role = (string) $request->query('role', '');
+        $status = (string) $request->query('status', '');
+
         return view('staff.index', [
-            'employees' => Employee::latest()->paginate(10),
+            'employees' => Employee::query()
+                ->when($search !== '', fn ($query) => $query->where('full_name', 'like', "%{$search}%")->orWhere('phone', 'like', "%{$search}%"))
+                ->when($role !== '', fn ($query) => $query->where('role', $role))
+                ->when($status !== '', fn ($query) => $query->where('status', $status))
+                ->latest()
+                ->paginate(10)
+                ->withQueryString(),
+            'filters' => compact('search', 'role', 'status'),
+            'roles' => $this->roles(),
         ]);
     }
 
@@ -70,9 +82,11 @@ class EmployeeController extends Controller
     private function roles(): array
     {
         return [
-            'Administrator',
+            'Egasi',
             'Menejer',
             'Kassir',
+            'Operator',
+            'Administrator',
             'Oshpaz',
             'Ofitsiant',
             'Dekorator',
