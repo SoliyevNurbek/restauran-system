@@ -402,12 +402,12 @@
                 <div class="register-grid two">
                     <div class="register-field">
                         <label for="first_name">{{ $t('auth_register_first_name', $copy['first_name']) }}</label>
-                        <input id="first_name" name="first_name" value="{{ old('first_name') }}" placeholder="{{ $placeholders['first_name'] }}" required>
+                        <input id="first_name" name="first_name" value="{{ old('first_name') }}" placeholder="{{ $placeholders['first_name'] }}" autocomplete="given-name" required>
                         @error('first_name')<div class="register-error">{{ $message }}</div>@enderror
                     </div>
                     <div class="register-field">
                         <label for="last_name">{{ $t('auth_register_last_name', $copy['last_name']) }}</label>
-                        <input id="last_name" name="last_name" value="{{ old('last_name') }}" placeholder="{{ $placeholders['last_name'] }}" required>
+                        <input id="last_name" name="last_name" value="{{ old('last_name') }}" placeholder="{{ $placeholders['last_name'] }}" autocomplete="family-name" required>
                         @error('last_name')<div class="register-error">{{ $message }}</div>@enderror
                     </div>
                 </div>
@@ -415,12 +415,12 @@
                 <div class="register-grid two">
                     <div class="register-field">
                         <label for="username">{{ $t('auth_register_username', $copy['username']) }}</label>
-                        <input id="username" name="username" value="{{ old('username') }}" placeholder="{{ $placeholders['username'] }}" autocomplete="username" required>
+                        <input id="username" name="username" value="{{ old('username') }}" placeholder="{{ $placeholders['username'] }}" autocomplete="username" autocapitalize="none" spellcheck="false" required>
                         @error('username')<div class="register-error">{{ $message }}</div>@enderror
                     </div>
                     <div class="register-field">
                         <label for="phone">{{ $t('auth_register_phone', $copy['phone']) }}</label>
-                        <input id="phone" name="phone" value="{{ old('phone') }}" placeholder="{{ $placeholders['phone'] }}" autocomplete="tel">
+                        <input id="phone" name="phone" value="{{ old('phone') }}" placeholder="{{ $placeholders['phone'] }}" inputmode="tel" autocomplete="tel">
                         @error('phone')<div class="register-error">{{ $message }}</div>@enderror
                     </div>
                 </div>
@@ -437,7 +437,7 @@
                                 autocomplete="new-password"
                                 required
                             >
-                            <button class="register-password-toggle" type="button" data-password-toggle="password" aria-label="{{ $t('auth_register_toggle_password', 'Parolni ko‘rsatish yoki yashirish') }}">
+                            <button class="register-password-toggle" type="button" data-password-toggle="password" aria-label="{{ $t('auth_register_toggle_password', "Parolni ko'rsatish yoki yashirish") }}">
                                 <svg data-password-icon="show" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                                     <path d="M2.25 12s3.75-6.75 9.75-6.75S21.75 12 21.75 12s-3.75 6.75-9.75 6.75S2.25 12 2.25 12Z"/>
                                     <circle cx="12" cy="12" r="3"/>
@@ -470,7 +470,7 @@
                                 autocomplete="new-password"
                                 required
                             >
-                            <button class="register-password-toggle" type="button" data-password-toggle="password_confirmation" aria-label="{{ $t('auth_register_toggle_password', 'Parolni ko‘rsatish yoki yashirish') }}">
+                            <button class="register-password-toggle" type="button" data-password-toggle="password_confirmation" aria-label="{{ $t('auth_register_toggle_password', "Parolni ko'rsatish yoki yashirish") }}">
                                 <svg data-password-icon="show" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                                     <path d="M2.25 12s3.75-6.75 9.75-6.75S21.75 12 21.75 12s-3.75 6.75-9.75 6.75S2.25 12 2.25 12Z"/>
                                     <circle cx="12" cy="12" r="3"/>
@@ -496,7 +496,7 @@
 
                 <div class="register-field">
                     <label for="restaurant_name">{{ $t('auth_register_restaurant_name', $copy['restaurant_name']) }}</label>
-                    <input id="restaurant_name" name="restaurant_name" value="{{ old('restaurant_name') }}" placeholder="{{ $placeholders['restaurant_name'] }}" required>
+                    <input id="restaurant_name" name="restaurant_name" value="{{ old('restaurant_name') }}" placeholder="{{ $placeholders['restaurant_name'] }}" autocomplete="organization" required>
                     @error('restaurant_name')<div class="register-error">{{ $message }}</div>@enderror
                 </div>
 

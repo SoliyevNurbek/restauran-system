@@ -60,12 +60,12 @@ Route::get('/media/{mediaFile}/{filename?}', MediaFileController::class)->name('
 Route::view('/', 'landing.index')->name('landing');
 Route::get('/pages/{slug}', [PageController::class, 'show'])->name('pages.show');
 
-Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
-Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:20,1')->name('login.store');
-Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
-Route::post('/register', [AuthController::class, 'register'])->middleware('throttle:10,1')->name('register.store');
-
 Route::middleware('guest')->group(function () {
+    Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
+    Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:20,1')->name('login.store');
+    Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
+    Route::post('/register', [AuthController::class, 'register'])->middleware('throttle:10,1')->name('register.store');
+
     Route::get('/superadmin/login', [SuperAdminAuthController::class, 'create'])->name('superadmin.login');
     Route::post('/superadmin/login', [SuperAdminAuthController::class, 'store'])->middleware('throttle:20,1')->name('superadmin.login.store');
 });

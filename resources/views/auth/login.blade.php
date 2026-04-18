@@ -268,7 +268,7 @@
                     <label class="lp-label" for="username">{{ $t('auth_login_username_label', $copy['username_label']) }}</label>
                     <div class="lp-input-wrap">
                         <svg class="lp-input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                        <input id="username" name="username" type="text" value="{{ old('username') }}" required placeholder="{{ $placeholders['username'] }}" class="lp-input {{ $errors->has('username') ? 'lp-input-err' : '' }}" autocomplete="username" autofocus>
+                        <input id="username" name="username" type="text" value="{{ old('username') }}" required placeholder="{{ $placeholders['username'] }}" class="lp-input {{ $errors->has('username') ? 'lp-input-err' : '' }}" autocomplete="username" autocapitalize="none" spellcheck="false" autofocus>
                     </div>
                     @error('username')
                         <div class="lp-error">{{ $message }}</div>
@@ -292,7 +292,8 @@
 
                 <div class="lp-options">
                     <label class="lp-remember">
-                        <input type="checkbox" name="remember">
+                        <input type="hidden" name="remember" value="0">
+                        <input type="checkbox" name="remember" value="1" {{ old('remember') ? 'checked' : '' }}>
                         <span>{{ $t('auth_login_remember', $copy['remember']) }}</span>
                     </label>
                 </div>

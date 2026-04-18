@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\Auth\RegisterRequest;
 use App\Http\Requests\Auth\LoginRequest;
+use App\Http\Requests\Auth\RegisterRequest;
 use App\Models\BusinessSubscription;
 use App\Models\SubscriptionPlan;
 use App\Models\User;
@@ -21,17 +21,31 @@ use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
+use Throwable;
 
 class AuthController extends Controller
 {
-
     public function showLogin(): View|RedirectResponse
     {
+        if (Auth::check()) {
+            /** @var User $user */
+            $user = Auth::user();
+
+            return redirect()->route($user->role === 'superadmin' ? 'superadmin.dashboard' : 'dashboard');
+        }
+
         return view('auth.login');
     }
 
     public function showRegister(): View|RedirectResponse
     {
+        if (Auth::check()) {
+            /** @var User $user */
+            $user = Auth::user();
+
+            return redirect()->route($user->role === 'superadmin' ? 'superadmin.dashboard' : 'dashboard');
+        }
+
         return view('auth.register');
     }
 
@@ -44,82 +58,100 @@ class AuthController extends Controller
         $locale = $this->locale($request);
         $data = $request->validated();
 
-        DB::transaction(function () use ($data, $notifications, $telegram) {
-            $venue = VenueConnection::create([
-                'venue_name' => $data['restaurant_name'],
-                'owner_name' => trim($data['first_name'].' '.$data['last_name']),
-                'username' => $data['username'],
-                'phone' => $data['phone'] ?? null,
-                'message' => $data['message'] ?? null,
-                'status' => 'pending',
-                'health_status' => 'new',
-            ]);
+        try {
+            if ($this->usernameExists($data['username'])) {
+                return back()
+                    ->withErrors(['username' => $this->text('username_taken', $locale)])
+                    ->withInput($request->except(['password', 'password_confirmation']));
+            }
 
-            $user = User::create([
-                'name' => $venue->owner_name,
-                'username' => $venue->username,
-                'password' => Hash::make($data['password']),
-                'role' => 'admin',
-                'status' => 'pending',
-                'venue_connection_id' => $venue->id,
-            ]);
-
-            $plan = Schema::hasTable('subscription_plans')
-                ? SubscriptionPlan::query()
-                    ->when(
-                        Schema::hasColumn('subscription_plans', 'is_active'),
-                        fn ($query) => $query->where('is_active', true)
-                    )
-                    ->orderByRaw("CASE WHEN slug = 'basic' THEN 0 ELSE 1 END")
-                    ->orderBy('display_order')
-                    ->first()
-                : null;
-
-            if ($plan && Schema::hasTable('business_subscriptions')) {
-                $trialEndsAt = now()->addDays(config('billing.trial_days', 7));
-
-                BusinessSubscription::query()->create([
-                    'venue_connection_id' => $venue->getKey(),
-                    'user_id' => $user->getKey(),
-                    'subscription_plan_id' => $plan->getKey(),
-                    'status' => 'trial',
-                    'activity_state' => 'healthy',
-                    'billing_cycle' => $plan->billing_cycle,
-                    'amount' => $plan->amount,
-                    'currency' => $plan->currency,
-                    'auto_renew' => false,
-                    'starts_at' => now(),
-                    'trial_ends_at' => $trialEndsAt,
-                    'renews_at' => $trialEndsAt,
-                    'expires_at' => $trialEndsAt,
-                    'notes' => 'Auto-created after registration request.',
+            DB::transaction(function () use ($data, $notifications, $telegram) {
+                $venue = VenueConnection::create([
+                    'venue_name' => $data['restaurant_name'],
+                    'owner_name' => trim($data['first_name'].' '.$data['last_name']),
+                    'username' => $data['username'],
+                    'phone' => $data['phone'] ?? null,
+                    'message' => $data['message'] ?? null,
+                    'status' => 'pending',
+                    'health_status' => 'new',
                 ]);
-            }
 
-            if (Schema::hasTable('admin_notifications')) {
-                $notifications->create(
-                    type: 'new_business_registration',
-                    title: "Yangi biznes ro'yxatdan o'tdi",
-                    description: $venue->venue_name." moderatsiya navbatiga qo'shildi.",
-                    status: 'warning',
-                    icon: 'building-2',
-                    actionUrl: route('superadmin.approvals.index'),
-                    relatedType: $venue::class,
-                    relatedId: $venue->getKey(),
-                    sendTelegram: true,
-                    telegramMessage: $telegram->format(
-                        heading: 'MyRestaurant_SN',
-                        eventType: 'New business registration',
-                        subject: $venue->venue_name,
-                        lines: [
-                            'Owner' => $venue->owner_name,
-                            'Telefon' => $venue->phone,
-                            'Username' => $venue->username,
-                        ],
-                    ),
-                );
-            }
-        });
+                $user = User::create([
+                    'name' => $venue->owner_name,
+                    'username' => $venue->username,
+                    'password' => Hash::make($data['password']),
+                    'role' => 'admin',
+                    'status' => 'pending',
+                    'venue_connection_id' => $venue->id,
+                ]);
+
+                $plan = Schema::hasTable('subscription_plans')
+                    ? SubscriptionPlan::query()
+                        ->when(
+                            Schema::hasColumn('subscription_plans', 'is_active'),
+                            fn ($query) => $query->where('is_active', true)
+                        )
+                        ->orderByRaw("CASE WHEN slug = 'basic' THEN 0 ELSE 1 END")
+                        ->orderBy('display_order')
+                        ->first()
+                    : null;
+
+                if ($plan && Schema::hasTable('business_subscriptions')) {
+                    $trialEndsAt = now()->addDays(config('billing.trial_days', 7));
+
+                    BusinessSubscription::query()->create([
+                        'venue_connection_id' => $venue->getKey(),
+                        'user_id' => $user->getKey(),
+                        'subscription_plan_id' => $plan->getKey(),
+                        'status' => 'trial',
+                        'activity_state' => 'healthy',
+                        'billing_cycle' => $plan->billing_cycle,
+                        'amount' => $plan->amount,
+                        'currency' => $plan->currency,
+                        'auto_renew' => false,
+                        'starts_at' => now(),
+                        'trial_ends_at' => $trialEndsAt,
+                        'renews_at' => $trialEndsAt,
+                        'expires_at' => $trialEndsAt,
+                        'notes' => 'Auto-created after registration request.',
+                    ]);
+                }
+
+                if (Schema::hasTable('admin_notifications')) {
+                    $notifications->create(
+                        type: 'new_business_registration',
+                        title: "Yangi biznes ro'yxatdan o'tdi",
+                        description: $venue->venue_name." moderatsiya navbatiga qo'shildi.",
+                        status: 'warning',
+                        icon: 'building-2',
+                        actionUrl: route('superadmin.approvals.index'),
+                        relatedType: $venue::class,
+                        relatedId: $venue->getKey(),
+                        sendTelegram: true,
+                        telegramMessage: $telegram->format(
+                            heading: 'MyRestaurant_SN',
+                            eventType: 'New business registration',
+                            subject: $venue->venue_name,
+                            lines: [
+                                'Owner' => $venue->owner_name,
+                                'Telefon' => $venue->phone,
+                                'Username' => $venue->username,
+                            ],
+                        ),
+                    );
+                }
+            });
+        } catch (Throwable $exception) {
+            Log::error('Registration request failed.', [
+                'username' => $data['username'],
+                'ip' => $request->ip(),
+                'message' => $exception->getMessage(),
+            ]);
+
+            return back()
+                ->withErrors(['username' => $this->text('service_unavailable', $locale)])
+                ->withInput($request->except(['password', 'password_confirmation']));
+        }
 
         return redirect()->route('login', ['lang' => $locale])->with('status', $this->text('register_success', $locale));
     }
@@ -128,13 +160,26 @@ class AuthController extends Controller
     {
         $locale = $this->locale($request);
 
+        try {
+            $user = $this->resolveUser($request->loginIdentifier());
+        } catch (Throwable $exception) {
+            Log::error('Login query failed.', [
+                'identifier' => $request->loginIdentifier(),
+                'ip' => $request->ip(),
+                'message' => $exception->getMessage(),
+            ]);
+
+            return back()->withErrors([
+                'username' => $this->text('service_unavailable', $locale),
+            ])->onlyInput('username');
+        }
+
         if ($this->isLockedOut($request)) {
             return back()->withErrors([
                 'username' => $this->text('invalid_login', $locale).'. '.$this->text('try_again_later', $locale),
             ])->onlyInput('username');
         }
 
-        $user = $this->resolveUser($request->loginIdentifier());
         $passwordValid = Hash::check(
             (string) $request->validated('password'),
             $user?->password ?? $this->fallbackPasswordHash()
@@ -176,6 +221,7 @@ class AuthController extends Controller
         Auth::login($user, $request->boolean('remember'));
         $request->session()->regenerate();
         $request->session()->regenerateToken();
+
         if (Schema::hasColumn('users', 'last_login_at') && Schema::hasColumn('users', 'last_login_ip')) {
             $user->forceFill([
                 'last_login_at' => now(),
@@ -223,6 +269,12 @@ class AuthController extends Controller
         return User::query()
             ->where('username', $identifier)
             ->first();
+    }
+
+    protected function usernameExists(string $username): bool
+    {
+        return User::query()->where('username', $username)->exists()
+            || VenueConnection::query()->where('username', $username)->exists();
     }
 
     protected function isLockedOut(LoginRequest $request): bool
@@ -297,25 +349,33 @@ class AuthController extends Controller
                 'invalid_login' => "Login yoki parol notog'ri",
                 'try_again_later' => "Iltimos, birozdan keyin qayta urinib ko'ring",
                 'account_pending' => "Hisobingiz hali tasdiqlanmagan yoki vaqtincha bloklangan.",
+                'username_taken' => 'Bu login allaqachon band.',
                 'register_success' => "Ro'yxatdan o'tish muvaffaqiyatli yakunlandi. So'rovingiz superadmin tasdig'idan so'ng faollashadi.",
+                'service_unavailable' => "Hozircha server bazaga ulanmayapti. Iltimos, birozdan keyin qayta urinib ko'ring.",
             ],
             'uzc' => [
                 'invalid_login' => "Login yoki parol noto'g'ri",
                 'try_again_later' => "Iltimos, birozdan keyin qayta urinib ko'ring",
                 'account_pending' => "Hisobingiz hali tasdiqlanmagan yoki vaqtincha bloklangan.",
+                'username_taken' => 'Bu login allaqachon band.',
                 'register_success' => "Ro'yxatdan o'tish muvaffaqiyatli yakunlandi. So'rovingiz superadmin tasdig'idan so'ng faollashadi.",
+                'service_unavailable' => "Hozircha server bazaga ulanmayapti. Iltimos, birozdan keyin qayta urinib ko'ring.",
             ],
             'ru' => [
-                'invalid_login' => 'Неверный логин или пароль',
-                'try_again_later' => 'Пожалуйста, попробуйте еще раз немного позже',
-                'account_pending' => 'Ваш аккаунт еще не подтвержден или временно заблокирован.',
-                'register_success' => 'Ваша заявка принята. После подтверждения супер администратором вы получите данные для входа.',
+                'invalid_login' => 'РќРµРІРµСЂРЅС‹Р№ Р»РѕРіРёРЅ РёР»Рё РїР°СЂРѕР»СЊ',
+                'try_again_later' => 'РџРѕР¶Р°Р»СѓР№СЃС‚Р°, РїРѕРїСЂРѕР±СѓР№С‚Рµ РµС‰Рµ СЂР°Р· РЅРµРјРЅРѕРіРѕ РїРѕР·Р¶Рµ',
+                'account_pending' => 'Р’Р°С€ Р°РєРєР°СѓРЅС‚ РµС‰Рµ РЅРµ РїРѕРґС‚РІРµСЂР¶РґРµРЅ РёР»Рё РІСЂРµРјРµРЅРЅРѕ Р·Р°Р±Р»РѕРєРёСЂРѕРІР°РЅ.',
+                'username_taken' => 'Р­С‚РѕС‚ Р»РѕРіРёРЅ СѓР¶Рµ Р·Р°РЅСЏС‚.',
+                'register_success' => 'Р’Р°С€Р° Р·Р°СЏРІРєР° РїСЂРёРЅСЏС‚Р°. РџРѕСЃР»Рµ РїРѕРґС‚РІРµСЂР¶РґРµРЅРёСЏ СЃСѓРїРµСЂ Р°РґРјРёРЅРёСЃС‚СЂР°С‚РѕСЂРѕРј РІС‹ РїРѕР»СѓС‡РёС‚Рµ РґР°РЅРЅС‹Рµ РґР»СЏ РІС…РѕРґР°.',
+                'service_unavailable' => 'РЎРµР№С‡Р°СЃ РЅРµС‚ СЃРІСЏР·Рё СЃ Р±Р°Р·РѕР№ РґР°РЅРЅС‹С…. РџРѕРїСЂРѕР±СѓР№С‚Рµ С‡СѓС‚СЊ РїРѕР·Р¶Рµ.',
             ],
             'en' => [
                 'invalid_login' => 'Invalid login or password',
                 'try_again_later' => 'Please try again a little later',
                 'account_pending' => 'Your account has not been approved yet or is temporarily blocked.',
+                'username_taken' => 'This username is already taken.',
                 'register_success' => 'Registration completed successfully. Your request will become active after superadmin approval.',
+                'service_unavailable' => 'The server cannot reach the database right now. Please try again shortly.',
             ],
         ];
 
