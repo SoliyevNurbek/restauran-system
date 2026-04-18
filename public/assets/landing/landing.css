@@ -134,6 +134,7 @@ button, input, select { font: inherit; }
 .hero-orb--left { top: 70px; left: -80px; width: 260px; height: 260px; background: rgba(124,140,255,.18); }
 .hero-orb--right { top: 140px; right: -70px; width: 220px; height: 220px; background: rgba(66,217,200,.14); }
 .hero-grid { position: relative; display: grid; grid-template-columns: minmax(0, 1fr) minmax(420px, 560px); gap: 42px; align-items: center; }
+.hero-grid, .hero-copy, .hero-preview, .preview-shell, .preview-layout, .preview-card, .preview-wide-card, .preview-metrics, .metric-card, .mini-table__row > div, .pipeline-list__item, .analytics-card { min-width: 0; }
 .hero-copy { padding: 44px 0 70px; max-width: 620px; }
 .hero-copy h1, .section-head h2, .cta-banner h2 {
     margin: 18px 0 0; font-family: "Cormorant Garamond", serif; font-weight: 700; letter-spacing: -.04em; line-height: .95;
@@ -156,11 +157,12 @@ button, input, select { font: inherit; }
 .stat-pill strong { display: block; font-size: 1.22rem; }
 .stat-pill span { display: block; margin-top: 8px; color: var(--muted-2); font-size: .88rem; }
 
-.hero-preview { position: relative; }
+.hero-preview { position: relative; width: 100%; max-width: 100%; }
 .preview-shell, .preview-card, .analytics-card, .benefit-card, .feature-card, .testimonial-card, .price-card, .contact-card, .problem-card, .solution-item, .preview-wide-card {
     border: 1px solid var(--line); background: var(--panel); backdrop-filter: blur(18px); box-shadow: var(--shadow);
 }
 .preview-shell {
+    width: 100%; max-width: 100%;
     border-radius: 30px; padding: 18px; background: linear-gradient(180deg, rgba(16,20,35,.92), rgba(12,16,28,.86));
 }
 .preview-shell__top, .preview-card__head, .mini-table__row, .pipeline-list__item, .price-card__amount, .testimonial-meta, .footer-bottom {
@@ -372,6 +374,8 @@ button, input, select { font: inherit; }
     .brand__meta strong { font-size: .92rem; }
     .hero-copy h1 { font-size: clamp(2.7rem, 13vw, 4rem); }
     .hero-copy { padding: 24px 0 34px; }
+    .hero-grid { gap: 24px; }
+    .hero-preview { padding-inline: 2px; }
     .hero-copy p, .section-head p, .problem-card p, .benefit-card p, .feature-card p, .solution-item p, .testimonial-card p, .price-card p, .footer-copy {
         font-size: .94rem;
         line-height: 1.7;
@@ -386,23 +390,40 @@ button, input, select { font: inherit; }
     .money-banner { flex-direction: column; align-items: stretch; }
     .site-nav { left: 14px; right: 14px; }
     .preview-shell, .cta-banner, .problem-card, .benefit-card, .feature-card, .testimonial-card, .price-card, .contact-card, .solution-item { padding: 20px; }
+    .preview-card, .preview-wide-card, .metric-card, .analytics-card { padding: 18px; }
+    .preview-card__head, .preview-wide-card .preview-card__head, .preview-shell__top, .mini-table__row, .pipeline-list__item { gap: 10px; }
+    .preview-title, .preview-card__head span, .mini-table__row small, .pipeline-list__item span { font-size: .78rem; }
+    .metric-card strong, .analytics-card strong { font-size: 1.2rem; }
     .footer-bottom { flex-direction: column; align-items: flex-start; }
 }
 @media (max-width: 560px) {
-    :root { --container: min(100%, calc(100% - 20px)); }
+    :root { --container: calc(100% - 20px); }
     .eyebrow { padding: 8px 12px; font-size: .66rem; letter-spacing: .1em; }
     .site-nav { left: 10px; right: 10px; padding: 14px; }
     .site-nav a { font-size: .88rem; }
     .hero-section { padding: 28px 0 12px; }
     .hero-copy h1 { font-size: clamp(2.25rem, 12vw, 3rem); max-width: 100%; }
+    .hero-grid { gap: 18px; }
+    .hero-copy { padding-bottom: 22px; }
+    .hero-preview { padding-inline: 0; }
+    .preview-shell { padding: 14px; border-radius: 22px; }
+    .preview-card, .preview-wide-card, .metric-card, .analytics-card { padding: 14px; border-radius: 18px; }
+    .preview-shell__top, .preview-card__head, .mini-table__row, .pipeline-list__item { align-items: flex-start; }
+    .preview-metrics { gap: 10px; }
+    .metric-card strong, .analytics-card strong, .price-card__amount strong { font-size: 1.1rem; }
+    .chart-bars { min-height: 120px; gap: 7px; }
+    .mini-calendar { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+    .mini-calendar__day { min-height: 44px; }
+    .mini-table { gap: 8px; }
+    .mini-table__row { padding: 10px 0; }
+    .pipeline-list { gap: 8px; }
+    .pipeline-list__item { padding: 10px 12px; }
     .section { padding: 72px 0; }
     .section--tight { padding-top: 56px; padding-bottom: 56px; }
     .section-head { margin-bottom: 28px; }
     .section-head h2, .cta-banner h2 { font-size: clamp(1.7rem, 9vw, 2.35rem); }
     .problem-card h3, .benefit-card h3, .feature-card h3, .solution-item h3, .price-card h3 { font-size: 1.05rem; }
-    .price-card__amount strong { font-size: 1.9rem; }
     .stat-pill, .metric-card, .analytics-card, .preview-card, .preview-wide-card, .problem-card, .benefit-card, .feature-card, .testimonial-card, .price-card, .contact-card, .solution-item, .cta-banner { border-radius: 20px; }
-    .mini-calendar__day { min-height: 50px; }
     .preview-placeholder { min-height: 110px; font-size: .84rem; }
     .cta-points span { min-height: 34px; font-size: .8rem; }
 }
