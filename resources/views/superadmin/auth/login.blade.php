@@ -20,6 +20,7 @@
             </div>
             @error('username')<p class="mt-3 text-sm text-rose-400">{{ $message }}</p>@enderror
             <label class="mt-5 inline-flex items-center gap-2 text-sm text-slate-300">
+                <input type="hidden" name="remember" value="0">
                 <input type="checkbox" name="remember" value="1" @checked(old('remember')) class="h-4 w-4 rounded border-slate-600 bg-slate-950 text-indigo-500 focus:ring-indigo-500">
                 <span>Meni eslab qol</span>
             </label>

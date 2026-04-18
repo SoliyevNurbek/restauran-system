@@ -16,6 +16,7 @@ class LoginRequest extends FormRequest
     {
         $this->merge([
             'username' => Str::lower(trim((string) $this->input('username', ''))),
+            'remember' => $this->boolean('remember'),
         ]);
     }
 
