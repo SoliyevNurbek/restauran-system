@@ -100,6 +100,18 @@ Asosiy maydonlar:
 9. Public HTTPS domain ulang
 10. Telegram webhook ni `POST /telegram/webhook` ga ulang
 
+## Railway deploy
+
+Railway uchun tayyor skriptlar:
+
+- `railway/init-app.sh`
+- `railway/run-worker.sh`
+- `railway/run-cron.sh`
+
+To'liq deploy yo'riqnomasi:
+
+- `docs/railway-deploy.md`
+
 ## Foydali buyruqlar
 
 ```bash
