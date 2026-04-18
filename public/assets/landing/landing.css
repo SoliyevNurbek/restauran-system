@@ -86,6 +86,7 @@ button, input, select { font: inherit; }
 .brand__meta strong { font-size: 1rem; font-weight: 800; letter-spacing: -.02em; }
 .brand__meta small { color: var(--muted-2); font-size: .76rem; line-height: 1.35; }
 .site-nav, .header-actions, .hero-actions, .cta-banner__actions { display: flex; align-items: center; gap: 14px; }
+.site-nav .header-actions--mobile { display: none; }
 .site-nav a {
     position: relative; font-size: .95rem; color: rgba(244,247,251,.8); font-weight: 600; padding: 8px 2px;
     transition: color .18s ease;
@@ -347,17 +348,37 @@ button, input, select { font: inherit; }
     .preview-layout, .preview-bottom-grid, .problem-grid, .benefit-grid, .feature-grid, .testimonial-grid, .pricing-grid, .contact-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 @media (max-width: 920px) {
+    .shell--header { align-items: flex-start; flex-wrap: wrap; }
     .site-nav {
         position: absolute; top: calc(100% + 10px); left: 24px; right: 24px; display: none; flex-direction: column; align-items: stretch;
         padding: 18px; border-radius: 20px; background: rgba(10,13,22,.96); border: 1px solid rgba(255,255,255,.10);
     }
+    .site-nav .lang-menu { margin-left: 0; }
+    .site-nav .header-actions--mobile {
+        display: grid;
+        grid-template-columns: 1fr;
+        width: 100%;
+        margin-top: 12px;
+    }
     .site-nav.is-open { display: flex; }
-    .header-actions { display: none; }
+    .shell--header > .header-actions { display: none; }
     .mobile-nav-toggle { display: inline-block; }
 }
 @media (max-width: 720px) {
     .container { width: min(100% - 28px, 1200px); }
+    .site-header { padding: 12px 0; }
+    .brand { gap: 10px; }
+    .brand__mark { width: 48px; height: 48px; flex-basis: 48px; border-radius: 16px; }
+    .brand__meta strong { font-size: .92rem; }
     .hero-copy h1 { font-size: clamp(2.7rem, 13vw, 4rem); }
+    .hero-copy { padding: 24px 0 34px; }
+    .hero-copy p, .section-head p, .problem-card p, .benefit-card p, .feature-card p, .solution-item p, .testimonial-card p, .price-card p, .footer-copy {
+        font-size: .94rem;
+        line-height: 1.7;
+    }
+    .hero-micro, .trust-row span, .stat-pill span, .mini-table__row small, .pipeline-list__item span, .price-card li, .contact-card small { font-size: .82rem; }
+    .button { min-height: 48px; padding: 0 18px; font-size: .92rem; }
+    .button--large { min-height: 52px; padding-inline: 20px; }
     .section-head h2, .cta-banner h2 { font-size: clamp(2rem, 10vw, 2.9rem); }
     .hero-stats, .preview-metrics, .preview-layout, .preview-bottom-grid, .preview-placeholders, .problem-grid, .solution-list, .benefit-grid, .feature-grid, .testimonial-grid, .pricing-grid, .contact-grid { grid-template-columns: 1fr; }
     .hero-actions, .cta-banner__actions { display: grid; grid-template-columns: 1fr; }
@@ -366,4 +387,22 @@ button, input, select { font: inherit; }
     .site-nav { left: 14px; right: 14px; }
     .preview-shell, .cta-banner, .problem-card, .benefit-card, .feature-card, .testimonial-card, .price-card, .contact-card, .solution-item { padding: 20px; }
     .footer-bottom { flex-direction: column; align-items: flex-start; }
+}
+@media (max-width: 560px) {
+    :root { --container: min(100%, calc(100% - 20px)); }
+    .eyebrow { padding: 8px 12px; font-size: .66rem; letter-spacing: .1em; }
+    .site-nav { left: 10px; right: 10px; padding: 14px; }
+    .site-nav a { font-size: .88rem; }
+    .hero-section { padding: 28px 0 12px; }
+    .hero-copy h1 { font-size: clamp(2.25rem, 12vw, 3rem); max-width: 100%; }
+    .section { padding: 72px 0; }
+    .section--tight { padding-top: 56px; padding-bottom: 56px; }
+    .section-head { margin-bottom: 28px; }
+    .section-head h2, .cta-banner h2 { font-size: clamp(1.7rem, 9vw, 2.35rem); }
+    .problem-card h3, .benefit-card h3, .feature-card h3, .solution-item h3, .price-card h3 { font-size: 1.05rem; }
+    .price-card__amount strong { font-size: 1.9rem; }
+    .stat-pill, .metric-card, .analytics-card, .preview-card, .preview-wide-card, .problem-card, .benefit-card, .feature-card, .testimonial-card, .price-card, .contact-card, .solution-item, .cta-banner { border-radius: 20px; }
+    .mini-calendar__day { min-height: 50px; }
+    .preview-placeholder { min-height: 110px; font-size: .84rem; }
+    .cta-points span { min-height: 34px; font-size: .8rem; }
 }

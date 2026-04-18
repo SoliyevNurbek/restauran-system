@@ -2,6 +2,7 @@
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Schema;
 use App\Models\LandingContent;
+use App\Models\SubscriptionPlan;
 
 $locale = in_array(request('lang', 'uz'), ['uz', 'uzc', 'ru', 'en'], true) ? request('lang', 'uz') : 'uz';
 $resolvedSetting = Schema::hasTable('settings') ? \App\Models\Setting::global() : null;
@@ -15,6 +16,25 @@ $langText = static fn (string $key, string $default) => filled($langPack->get($k
     : (filled($fallbackPack->get($key)) ? $fallbackPack->get($key) : $default);
 $loginUrl = Route::has('login') ? route('login', ['lang' => $locale]) : '#';
 $registerUrl = Route::has('register') ? route('register', ['lang' => $locale]) : '#';
+$formatMoney = static function (float|int|string $amount, string $currency): string {
+    $amount = (float) $amount;
+
+    return match (strtoupper($currency)) {
+        'USD' => '$'.number_format($amount, 0, '.', ','),
+        'EUR' => '€'.number_format($amount, 0, '.', ','),
+        default => number_format($amount, 0, '.', ' ').' '.strtoupper($currency),
+    };
+};
+$formatPlanPeriod = static function (?string $billingCycle, ?int $durationDays) use ($locale): string {
+    $days = max((int) $durationDays, 1);
+
+    return match ($billingCycle) {
+        'yearly' => $locale === 'en' ? '/year' : ($locale === 'ru' ? '/год' : '/yil'),
+        'quarterly' => $locale === 'en' ? '/quarter' : ($locale === 'ru' ? '/kvartal' : '/chorak'),
+        'manual' => $locale === 'en' ? "/{$days} days" : ($locale === 'ru' ? "/{$days} дней" : "/{$days} kun"),
+        default => $locale === 'en' ? '/month' : ($locale === 'ru' ? '/месяц' : '/oy'),
+    };
+};
 $iconSvgs = [
     'calendar' => '<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M8 2V5" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/><path d="M16 2V5" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/><path d="M3.5 9.09H20.5" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/><rect x="3" y="4.5" width="18" height="16.5" rx="3" stroke="currentColor" stroke-width="1.75"/><path d="M8 13H8.01" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M12 13H12.01" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M16 13H16.01" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>',
     'users' => '<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M16 21V19C16 17.3431 14.6569 16 13 16H7C5.34315 16 4 17.3431 4 19V21" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/><circle cx="10" cy="8" r="4" stroke="currentColor" stroke-width="1.75"/><path d="M20 21V19C20 17.5311 18.9429 16.3092 17.55 16.054" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/><path d="M14.55 4.05402C15.9429 4.30921 17 5.53114 17 7C17 8.46886 15.9429 9.69079 14.55 9.94598" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/></svg>',
@@ -417,6 +437,31 @@ if ($locale === 'ru') {
 $contentOverride = Schema::hasTable('landing_contents')
     ? LandingContent::query()->where('locale', $locale)->first()
     : null;
+$dbPlans = Schema::hasTable('subscription_plans')
+    ? SubscriptionPlan::query()
+        ->when(Schema::hasColumn('subscription_plans', 'is_active'), fn ($query) => $query->where('is_active', true))
+        ->orderBy('display_order')
+        ->get()
+    : collect();
+
+if ($dbPlans->isNotEmpty()) {
+    $popularSlug = $dbPlans->firstWhere('slug', 'standard')?->slug
+        ?? $dbPlans->firstWhere('slug', 'pro')?->slug
+        ?? $dbPlans->skip(1)->first()?->slug
+        ?? $dbPlans->first()?->slug;
+
+    $c['plans'] = $dbPlans->map(function (SubscriptionPlan $plan) use ($formatMoney, $formatPlanPeriod, $popularSlug) {
+        return [
+            $plan->name,
+            $formatMoney($plan->amount, $plan->currency ?: 'UZS'),
+            $formatPlanPeriod($plan->billing_cycle, $plan->duration_days),
+            $plan->description ?: '',
+            collect($plan->features ?? [])->filter()->values()->all(),
+            $plan->slug === $popularSlug,
+        ];
+    })->all();
+}
+
 if ($contentOverride) {
     $c['hero']['badge'] = $contentOverride->hero_badge ?: $c['hero']['badge'];
     $c['hero']['title'] = $contentOverride->hero_title ?: $c['hero']['title'];
@@ -491,7 +536,7 @@ $pipe = in_array($locale, ['uz', 'uzc'], true)
 <section class="section section--soft"><div class="container"><div class="section-head"><span class="eyebrow">{{ $langText('landing_features_heading', 'Features') }}</span><h2>{{ $c['features_title'] }}</h2></div><div class="feature-grid">@foreach ($c['features'] as [$icon,$title,$text,$tone])<article class="feature-card feature-card--{{ $tone }}"><span class="feature-card__icon">{!! $iconSvgs[$icon] ?? $iconSvgs['layout'] !!}</span><h3>{{ $title }}</h3><p>{{ $text }}</p></article>@endforeach</div></div></section>
 <section class="section"><div class="container"><div class="section-head"><span class="eyebrow">{{ $langText('landing_revenue_heading', 'Revenue') }}</span><h2>{{ $c['money_title'] }}</h2><p>{{ $c['money_text'] }}</p></div><div class="money-banner"><strong>{{ $c['money_highlight'] }}</strong><a href="#contact" class="button button--primary">{{ $c['hero']['primary'] }}</a></div></div></section>
 <section class="section" id="testimonials"><div class="container"><div class="section-head"><span class="eyebrow">{{ $langText('landing_social_heading', 'Social proof') }}</span><h2>{{ $c['testimonials_title'] }}</h2></div><div class="testimonial-grid">@foreach ($c['testimonials'] as [$quote,$name,$role])<article class="testimonial-card"><div class="testimonial-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div><p>{{ $quote }}</p><div class="testimonial-meta"><strong>{{ $name }}</strong><span>{{ $role }}</span></div></article>@endforeach</div></div></section>
-<section class="section section--dark-panel" id="pricing"><div class="container"><div class="section-head"><span class="eyebrow">{{ $langText('landing_pricing_heading', 'Pricing') }}</span><h2>{{ $c['pricing_title'] }}</h2></div><div class="pricing-grid">@foreach ($c['plans'] as [$name,$price,$period,$text,$items,$popular])<article class="price-card {{ $popular ? 'is-popular' : '' }}">@if($popular)<span class="badge badge--popular">{{ $c['popular'] }}</span>@endif<h3>{{ $name }}</h3><div class="price-card__amount"><strong>{{ $price }}</strong><span>{{ $period }}</span></div><p>{{ $text }}</p><ul>@foreach($items as $item)<li>{{ $item }}</li>@endforeach</ul><a href="#contact" class="button {{ $popular ? 'button--primary' : 'button--ghost' }}">{{ $c['hero']['primary'] }}</a></article>@endforeach</div></div></section>
+<section class="section section--dark-panel" id="pricing"><div class="container"><div class="section-head"><span class="eyebrow">{{ $langText('landing_pricing_heading', 'Pricing') }}</span><h2>{{ $c['pricing_title'] }}</h2></div><div class="pricing-grid">@foreach ($c['plans'] as [$name,$price,$period,$text,$items,$popular])<article class="price-card {{ $popular ? 'is-popular' : '' }}">@if($popular)<span class="badge badge--popular">{{ $c['popular'] }}</span>@endif<h3>{{ $name }}</h3><div class="price-card__amount"><strong>{{ $price }}</strong><span>{{ $period }}</span></div>@if(filled($text))<p>{{ $text }}</p>@endif<ul>@foreach(collect($items)->take(6) as $item)<li>{{ $item }}</li>@endforeach</ul><a href="#contact" class="button {{ $popular ? 'button--primary' : 'button--ghost' }}">{{ $c['hero']['primary'] }}</a></article>@endforeach</div></div></section>
 <section class="section section--cta"><div class="container"><div class="cta-banner"><div><span class="eyebrow">{{ $c['brand'] }}</span><h2>{{ $c['final_title'] }}</h2><p>{{ $c['final_text'] }}</p><div class="cta-points"><span>{{ $langText('landing_cta_point_demo', 'Bepul demo olish') }}</span><span>{{ $langText('landing_cta_point_trial', '7 kunlik bepul sinov') }}</span><span>{{ $langText('landing_cta_point_consultation', 'Konsultatsiya') }}</span></div></div><div class="cta-banner__actions"><a href="{{ $registerUrl }}" class="button button--primary button--large">{{ $c['nav']['register'] }}</a><a href="#contact" class="button button--secondary button--large">{{ $c['demo_request'] }}</a></div></div></div></section>
 <section class="section section--tight" id="contact"><div class="container contact-layout"><div class="section-head section-head--left"><span class="eyebrow">{{ $langText('landing_contact_heading', 'Contact') }}</span><h2>{{ $c['contact_title'] }}</h2><p>{{ $c['contact_text'] }}</p></div><div class="contact-grid"><article class="contact-card"><small>{{ $langText('landing_contact_phone_label', 'Phone') }}</small><strong><a href="tel:{{ preg_replace('/[^0-9+]/', '', $resolvedSetting?->contact_phone ?: '+998 90 777 77 77') }}">{{ $resolvedSetting?->contact_phone ?: '+998 90 777 77 77' }}</a></strong></article><article class="contact-card"><small>{{ $langText('landing_contact_telegram_label', 'Telegram') }}</small><strong><a href="https://t.me/SoliyevNurbek" target="_blank" rel="noopener noreferrer">@SoliyevNurbek</a></strong></article><article class="contact-card"><small>Jamoa Telegram</small><strong><a href="https://t.me/MyRestaurant_SN" target="_blank" rel="noopener noreferrer">@MyRestaurant_SN</a></strong></article></div></div></section>
 </main>

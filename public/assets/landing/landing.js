@@ -1,6 +1,7 @@
 const header = document.querySelector('[data-site-header]');
 const mobileToggle = document.querySelector('[data-mobile-toggle]');
 const mobileNav = document.querySelector('[data-mobile-nav]');
+const desktopActions = document.querySelector('.shell--header > .header-actions');
 
 const syncHeaderState = () => {
     if (!header) return;
@@ -11,6 +12,12 @@ syncHeaderState();
 window.addEventListener('scroll', syncHeaderState, { passive: true });
 
 if (mobileToggle && mobileNav) {
+    if (desktopActions && !mobileNav.querySelector('.header-actions--mobile')) {
+        const mobileActions = desktopActions.cloneNode(true);
+        mobileActions.classList.add('header-actions--mobile');
+        mobileNav.appendChild(mobileActions);
+    }
+
     mobileToggle.addEventListener('click', () => {
         const expanded = mobileToggle.getAttribute('aria-expanded') === 'true';
         mobileToggle.setAttribute('aria-expanded', expanded ? 'false' : 'true');
