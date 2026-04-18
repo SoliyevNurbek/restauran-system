@@ -10,7 +10,9 @@ use App\Models\Setting;
 use App\Services\SuperAdmin\AdminNotificationService;
 use App\Services\SuperAdmin\AuditLogService;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 use Illuminate\View\View;
 
 class SettingController extends Controller
@@ -129,16 +131,23 @@ class SettingController extends Controller
         AdminNotificationService $notifications,
     ): RedirectResponse
     {
-        $request->user()->update([
+        $user = $request->user();
+
+        $user->forceFill([
             'password' => $request->validated('password'),
-        ]);
+            'remember_token' => Str::random(60),
+        ])->save();
+
+        Auth::login($user, false);
+        $request->session()->regenerate();
+        $request->session()->regenerateToken();
 
         Log::channel('audit')->warning('Superadmin password updated.', [
-            'user_id' => $request->user()?->getKey(),
+            'user_id' => $user?->getKey(),
             'ip' => $request->ip(),
         ]);
 
-        $audit->record('superadmin.password.updated', $request->user(), null, ['password' => 'updated'], 'warning', $request, $request->user()?->name);
+        $audit->record('superadmin.password.updated', $user, null, ['password' => 'updated'], 'warning', $request, $user?->name);
         $notifications->create(
             type: 'important_settings_change',
             title: 'Superadmin paroli yangilandi',
