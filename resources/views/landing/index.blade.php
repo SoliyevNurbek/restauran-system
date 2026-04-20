@@ -75,6 +75,7 @@ $content = [
             'text' => "To'yxona egasi, administrator va menejer uchun eng muhim oqimlar bitta qisqa preview ichida.",
             'duration' => '00:30',
             'cta' => "Demo ko'rish",
+            'embed' => null,
         ],
     ],
     'stats' => [
@@ -282,6 +283,47 @@ $showcaseModules = [
     ['title' => 'Revenue visibility', 'text' => "Avans va final to'lovlar uzilmaydi."],
     ['title' => 'Hall calendar', 'text' => "Band kunlar bir qarashda ko'rinadi."],
 ];
+
+$calculatorPlans = collect($pricingPlans)->map(function (array $plan) {
+    return [
+        'name' => $plan[0],
+        'amount' => (int) preg_replace('/[^0-9]/', '', $plan[1]),
+        'highlighted' => (bool) $plan[5],
+    ];
+})->values();
+
+$demoFunnelSteps = [
+    [
+        'eyebrow' => '1-qadam',
+        'title' => 'Rolingizni tanlang',
+        'text' => "Sizga mos demo oqimini tanlash uchun avval jamoa ichidagi vazifangizni belgilang.",
+        'choices' => [
+            ['value' => 'owner', 'label' => "To'yxona egasi"],
+            ['value' => 'admin', 'label' => 'Administrator'],
+            ['value' => 'manager', 'label' => 'Menejer'],
+        ],
+    ],
+    [
+        'eyebrow' => '2-qadam',
+        'title' => 'Operatsiya hajmini belgilang',
+        'text' => "Zallar soni va kiruvchi bron oqimi bo'yicha tizim yuklamasini tanlang.",
+        'choices' => [
+            ['value' => 'compact', 'label' => '1-2 zal'],
+            ['value' => 'growth', 'label' => '3-4 zal'],
+            ['value' => 'scale', 'label' => '5+ zal'],
+        ],
+    ],
+    [
+        'eyebrow' => '3-qadam',
+        'title' => 'Qachon start bermoqchisiz?',
+        'text' => "Shu ma'lumot asosida demo, onboarding va registratsiya yo'lini qisqartiramiz.",
+        'choices' => [
+            ['value' => 'now', 'label' => 'Shu hafta'],
+            ['value' => 'month', 'label' => 'Shu oy'],
+            ['value' => 'later', 'label' => 'Ko\'rib chiqyapman'],
+        ],
+    ],
+];
 @endphp
 
 <x-layouts.landing :title="$content['meta_title']" :description="$content['meta_description']">
@@ -365,7 +407,7 @@ $showcaseModules = [
                         <article class="hero-video-card premium-card" data-reveal>
                             <div class="hero-video-card__visual">
                                 <span class="hero-video-card__duration">{{ $content['hero']['video']['duration'] }}</span>
-                                <button type="button" class="hero-video-card__play" aria-label="{{ $content['hero']['video']['cta'] }}">
+                                <button type="button" class="hero-video-card__play" aria-label="{{ $content['hero']['video']['cta'] }}" data-video-modal-open>
                                     <span></span>
                                 </button>
                                 <div class="hero-video-card__glow" aria-hidden="true"></div>
@@ -374,7 +416,7 @@ $showcaseModules = [
                                 <small>{{ $content['hero']['video']['label'] }}</small>
                                 <strong>{{ $content['hero']['video']['title'] }}</strong>
                                 <p>{{ $content['hero']['video']['text'] }}</p>
-                                <a href="#contact" class="button button--ghost">{{ $content['hero']['video']['cta'] }}</a>
+                                <button type="button" class="button button--ghost" data-video-modal-open>{{ $content['hero']['video']['cta'] }}</button>
                             </div>
                         </article>
                     </div>
@@ -815,6 +857,117 @@ $showcaseModules = [
                 </div>
             </section>
 
+            <section class="section-block section-block--muted">
+                <div class="container">
+                    <div class="calculator-shell premium-card" data-reveal data-pricing-calculator data-plans='@json($calculatorPlans)'>
+                        <div class="calculator-copy">
+                            <x-landing.section-heading eyebrow="Pricing calculator" title="Qaysi tarif sizga mosligini tez hisoblang" subtitle="Zallar soni va oylik bron oqimiga qarab tavsiya etilgan plan, taxminiy oylik xarajat va qaytariladigan daromad ko'rinadi." />
+                        </div>
+
+                        <div class="calculator-grid">
+                            <article class="calculator-panel premium-card">
+                                <label class="calculator-field">
+                                    <span>Zallar soni</span>
+                                    <input type="range" min="1" max="6" value="2" data-calc-halls>
+                                    <strong data-calc-halls-output>2 ta zal</strong>
+                                </label>
+
+                                <label class="calculator-field">
+                                    <span>Oylik bron oqimi</span>
+                                    <input type="range" min="20" max="180" step="10" value="70" data-calc-leads>
+                                    <strong data-calc-leads-output>70 ta lead / oy</strong>
+                                </label>
+
+                                <label class="calculator-field">
+                                    <span>Tanlangan plan</span>
+                                    <select data-calc-plan>
+                                        @foreach ($calculatorPlans as $plan)
+                                            <option value="{{ $plan['name'] }}" @selected($plan['highlighted'])>{{ $plan['name'] }}</option>
+                                        @endforeach
+                                    </select>
+                                </label>
+                            </article>
+
+                            <article class="calculator-summary premium-card">
+                                <div class="calculator-summary__top">
+                                    <small>Tavsiya</small>
+                                    <strong data-calc-recommendation>Pro</strong>
+                                </div>
+                                <div class="calculator-metrics">
+                                    <div>
+                                        <span>Oylik abonent to'lovi</span>
+                                        <strong data-calc-price>990 000 UZS</strong>
+                                    </div>
+                                    <div>
+                                        <span>Yillik ekvivalenti</span>
+                                        <strong data-calc-yearly>11 880 000 UZS</strong>
+                                    </div>
+                                    <div>
+                                        <span>Qaytariladigan potensial bron</span>
+                                        <strong data-calc-recovered>21 lead</strong>
+                                    </div>
+                                </div>
+                                <p data-calc-note>Ko'proq zal va yuqori bron oqimi uchun chuqur analytics va multi-hall nazorat tavsiya qilinadi.</p>
+                                <div class="calculator-actions">
+                                    <a href="{{ $registerUrl }}" class="button button--primary">Registratsiya</a>
+                                    <a href="#contact" class="button button--ghost">Demo olish</a>
+                                </div>
+                            </article>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="section-block">
+                <div class="container">
+                    <div class="funnel-shell premium-card" data-reveal data-demo-funnel>
+                        <div class="funnel-copy">
+                            <x-landing.section-heading eyebrow="Demo booking funnel" title="3 qadamda demo yoki registratsiya yo'lini tanlang" subtitle="Uzun form o'rniga, kerakli yo'nalishni tanlaysiz va tizim sizni to'g'ri CTA'ga olib boradi." />
+                        </div>
+
+                        <div class="funnel-grid">
+                            <div class="funnel-steps">
+                                @foreach ($demoFunnelSteps as $stepIndex => $step)
+                                    <article class="funnel-step premium-card @if($stepIndex === 0) is-active @endif" data-funnel-step="{{ $stepIndex }}">
+                                        <small>{{ $step['eyebrow'] }}</small>
+                                        <h3>{{ $step['title'] }}</h3>
+                                        <p>{{ $step['text'] }}</p>
+                                        <div class="funnel-choices">
+                                            @foreach ($step['choices'] as $choice)
+                                                <button
+                                                    type="button"
+                                                    class="funnel-choice @if($loop->first) is-selected @endif"
+                                                    data-funnel-choice
+                                                    data-step="{{ $stepIndex }}"
+                                                    data-value="{{ $choice['value'] }}"
+                                                >
+                                                    {{ $choice['label'] }}
+                                                </button>
+                                            @endforeach
+                                        </div>
+                                    </article>
+                                @endforeach
+                            </div>
+
+                            <aside class="funnel-summary premium-card">
+                                <small>Personalized route</small>
+                                <h3 data-funnel-title>Pro demo tavsiya qilinadi</h3>
+                                <p data-funnel-text>Jamoangiz uchun mos demo oqimi tanlandi. Endi tez onboarding yoki to'g'ridan-to'g'ri registratsiyaga o'tishingiz mumkin.</p>
+                                <div class="funnel-pills">
+                                    <span data-funnel-role-pill>Owner flow</span>
+                                    <span data-funnel-scale-pill>Growth setup</span>
+                                    <span data-funnel-timing-pill>Shu hafta</span>
+                                </div>
+                                <div class="funnel-summary__actions">
+                                    <a href="#contact" class="button button--primary" data-funnel-primary>Demo bron qilish</a>
+                                    <a href="{{ $registerUrl }}" class="button button--ghost" data-funnel-secondary>Registratsiya</a>
+                                </div>
+                            </aside>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
             <section class="section-block">
                 <div class="container">
                     <div class="objection-shell premium-card" data-reveal>
@@ -919,6 +1072,55 @@ $showcaseModules = [
         <div class="mobile-cta-bar" aria-label="Mobile quick actions">
             <a href="#contact" class="button button--secondary">Demo</a>
             <a href="{{ $registerUrl }}" class="button button--primary">Registratsiya</a>
+        </div>
+
+        <div class="video-modal" data-video-modal hidden aria-hidden="true">
+            <div class="video-modal__backdrop" data-video-modal-close></div>
+            <div class="video-modal__dialog premium-card" role="dialog" aria-modal="true" aria-labelledby="demo-video-title">
+                <button type="button" class="video-modal__close" aria-label="Close demo video" data-video-modal-close>&times;</button>
+
+                @if ($content['hero']['video']['embed'])
+                    <div class="video-modal__frame">
+                        <iframe
+                            data-video-embed
+                            title="{{ $content['hero']['video']['title'] }}"
+                            src=""
+                            data-src="{{ $content['hero']['video']['embed'] }}"
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                            allowfullscreen
+                        ></iframe>
+                    </div>
+                @else
+                    <div class="video-modal__fallback">
+                        <div class="video-modal__fallback-copy">
+                            <small>Interactive walkthrough</small>
+                            <h3 id="demo-video-title">{{ $content['hero']['video']['title'] }}</h3>
+                            <p>{{ $content['hero']['video']['text'] }}</p>
+                        </div>
+                        <div class="video-modal__timeline">
+                            <article class="video-timeline-card premium-card">
+                                <small>00:08</small>
+                                <strong>Bron va kalendar oqimi</strong>
+                                <p>Band kunlar, zal availability va auto lock jarayoni ko'rsatiladi.</p>
+                            </article>
+                            <article class="video-timeline-card premium-card">
+                                <small>00:16</small>
+                                <strong>CRM + pipeline nazorati</strong>
+                                <p>Lead'dan to'lovgacha bo'lgan jarayon realtime panelda ochiladi.</p>
+                            </article>
+                            <article class="video-timeline-card premium-card">
+                                <small>00:30</small>
+                                <strong>Rahbar dashboard</strong>
+                                <p>Tushum, qarzdorlik va bandlik ko'rsatkichlari bir sahifada yakunlanadi.</p>
+                            </article>
+                        </div>
+                        <div class="video-modal__fallback-actions">
+                            <a href="#contact" class="button button--primary">Live demo so'rash</a>
+                            <a href="{{ $registerUrl }}" class="button button--ghost">Registratsiya</a>
+                        </div>
+                    </div>
+                @endif
+            </div>
         </div>
 
         {{-- 3D: hero dashboard stage, floating KPI cards, pseudo-3D product showcase, layered compare panels. --}}

@@ -2,6 +2,8 @@ const header = document.querySelector('[data-site-header]');
 const mobileToggle = document.querySelector('[data-mobile-toggle]');
 const mobileNav = document.querySelector('[data-mobile-nav]');
 const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const videoModal = document.querySelector('[data-video-modal]');
+const videoEmbed = document.querySelector('[data-video-embed]');
 
 const syncHeader = () => {
     if (!header) return;
@@ -27,6 +29,42 @@ if (mobileToggle && mobileNav) {
         });
     });
 }
+
+const openVideoModal = () => {
+    if (!videoModal) return;
+    videoModal.hidden = false;
+    videoModal.setAttribute('aria-hidden', 'false');
+    document.body.style.overflow = 'hidden';
+
+    if (videoEmbed?.dataset.src) {
+        videoEmbed.src = videoEmbed.dataset.src;
+    }
+};
+
+const closeVideoModal = () => {
+    if (!videoModal) return;
+    videoModal.hidden = true;
+    videoModal.setAttribute('aria-hidden', 'true');
+    document.body.style.overflow = '';
+
+    if (videoEmbed) {
+        videoEmbed.src = '';
+    }
+};
+
+document.querySelectorAll('[data-video-modal-open]').forEach((trigger) => {
+    trigger.addEventListener('click', openVideoModal);
+});
+
+document.querySelectorAll('[data-video-modal-close]').forEach((trigger) => {
+    trigger.addEventListener('click', closeVideoModal);
+});
+
+window.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape') {
+        closeVideoModal();
+    }
+});
 
 const revealItems = document.querySelectorAll('[data-reveal]');
 
@@ -90,3 +128,106 @@ if (!prefersReducedMotion) {
         });
     });
 }
+
+document.querySelectorAll('[data-pricing-calculator]').forEach((calculator) => {
+    const plans = JSON.parse(calculator.dataset.plans || '[]');
+    const hallsInput = calculator.querySelector('[data-calc-halls]');
+    const leadsInput = calculator.querySelector('[data-calc-leads]');
+    const planSelect = calculator.querySelector('[data-calc-plan]');
+    const hallsOutput = calculator.querySelector('[data-calc-halls-output]');
+    const leadsOutput = calculator.querySelector('[data-calc-leads-output]');
+    const recommendation = calculator.querySelector('[data-calc-recommendation]');
+    const priceOutput = calculator.querySelector('[data-calc-price]');
+    const yearlyOutput = calculator.querySelector('[data-calc-yearly]');
+    const recoveredOutput = calculator.querySelector('[data-calc-recovered]');
+    const noteOutput = calculator.querySelector('[data-calc-note]');
+
+    if (!hallsInput || !leadsInput || !planSelect) return;
+
+    const formatUzs = (value) => `${new Intl.NumberFormat('en-US').format(value).replace(/,/g, ' ')} UZS`;
+    const getPlan = (name) => plans.find((plan) => plan.name === name) || plans[0];
+
+    const syncCalculator = () => {
+        const halls = Number(hallsInput.value);
+        const leads = Number(leadsInput.value);
+        let recommendedName = 'Basic';
+
+        if (halls >= 5 || leads >= 120) {
+            recommendedName = 'Premium';
+        } else if (halls >= 3 || leads >= 60) {
+            recommendedName = 'Pro';
+        }
+
+        const selectedPlan = getPlan(planSelect.value);
+        const recommendedPlan = getPlan(recommendedName);
+        const recovered = Math.round(leads * (recommendedName === 'Premium' ? 0.34 : recommendedName === 'Pro' ? 0.3 : 0.22));
+
+        hallsOutput.textContent = `${halls} ta zal`;
+        leadsOutput.textContent = `${leads} ta lead / oy`;
+        recommendation.textContent = recommendedPlan.name;
+        priceOutput.textContent = formatUzs(selectedPlan.amount);
+        yearlyOutput.textContent = formatUzs(selectedPlan.amount * 12);
+        recoveredOutput.textContent = `${recovered} lead`;
+        noteOutput.textContent = `${recommendedPlan.name} tavsiyasi ${halls} ta zal va ${leads} ta oylik lead oqimi uchun eng mos operatsion nazoratni beradi.`;
+    };
+
+    [hallsInput, leadsInput, planSelect].forEach((field) => field.addEventListener('input', syncCalculator));
+    syncCalculator();
+});
+
+document.querySelectorAll('[data-demo-funnel]').forEach((funnel) => {
+    const title = funnel.querySelector('[data-funnel-title]');
+    const text = funnel.querySelector('[data-funnel-text]');
+    const rolePill = funnel.querySelector('[data-funnel-role-pill]');
+    const scalePill = funnel.querySelector('[data-funnel-scale-pill]');
+    const timingPill = funnel.querySelector('[data-funnel-timing-pill]');
+    const primary = funnel.querySelector('[data-funnel-primary]');
+    const secondary = funnel.querySelector('[data-funnel-secondary]');
+    const state = { 0: 'owner', 1: 'growth', 2: 'now' };
+
+    const syncFunnel = () => {
+        const roleMap = {
+            owner: ['Owner flow', 'Rahbar demo tavsiya qilinadi', "Daromad, bandlik va boshqaruv nazorati markazga olinadi."],
+            admin: ['Admin flow', 'Operatsion demo tavsiya qilinadi', "Kalendar, bron va mijoz bilan ishlash oqimi tezlashtiriladi."],
+            manager: ['Manager flow', 'Sales demo tavsiya qilinadi', "Lead pipeline va follow-up jarayoni asosiy fokusga olinadi."],
+        };
+        const scaleMap = {
+            compact: 'Compact setup',
+            growth: 'Growth setup',
+            scale: 'Scale setup',
+        };
+        const timingMap = {
+            now: 'Shu hafta',
+            month: 'Shu oy',
+            later: 'Rejalashtirilgan',
+        };
+
+        const [roleLabel, roleTitle, roleText] = roleMap[state[0]] || roleMap.owner;
+        title.textContent = roleTitle;
+        text.textContent = `${roleText} ${scaleMap[state[1]] || 'Growth setup'} va ${timingMap[state[2]] || 'Shu hafta'} uchun tez yo'l tayyor.`;
+        rolePill.textContent = roleLabel;
+        scalePill.textContent = scaleMap[state[1]] || 'Growth setup';
+        timingPill.textContent = timingMap[state[2]] || 'Shu hafta';
+        primary.textContent = state[2] === 'later' ? "Konsultatsiya olish" : "Demo bron qilish";
+        secondary.textContent = state[2] === 'later' ? "Registratsiyani ko'rish" : 'Registratsiya';
+    };
+
+    funnel.querySelectorAll('[data-funnel-choice]').forEach((choice) => {
+        choice.addEventListener('click', () => {
+            const step = Number(choice.dataset.step);
+            state[step] = choice.dataset.value;
+
+            funnel.querySelectorAll(`[data-step="${step}"]`).forEach((item) => {
+                item.classList.toggle('is-selected', item === choice);
+            });
+
+            funnel.querySelectorAll('[data-funnel-step]').forEach((stepCard, index) => {
+                stepCard.classList.toggle('is-active', index === step);
+            });
+
+            syncFunnel();
+        });
+    });
+
+    syncFunnel();
+});

@@ -1228,6 +1228,241 @@ button, input, select, textarea { font: inherit; }
 }
 .pricing-card .button { margin-top: auto; }
 
+.calculator-shell,
+.funnel-shell {
+    padding: 30px;
+    border-radius: 32px;
+}
+.calculator-grid,
+.funnel-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
+    gap: 20px;
+    align-items: start;
+}
+.calculator-panel,
+.calculator-summary,
+.funnel-summary {
+    padding: 24px;
+    border-radius: 28px;
+}
+.calculator-panel {
+    display: grid;
+    gap: 18px;
+}
+.calculator-field {
+    display: grid;
+    gap: 12px;
+}
+.calculator-field span,
+.funnel-summary small,
+.funnel-step small,
+.video-modal__fallback-copy small {
+    color: var(--muted-strong);
+    font-size: 0.74rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+}
+.calculator-field input[type="range"] {
+    width: 100%;
+    accent-color: var(--emerald);
+}
+.calculator-field select {
+    min-height: 54px;
+    padding: 0 16px;
+    border-radius: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.04);
+    color: var(--text);
+}
+.calculator-field strong,
+.calculator-summary__top strong {
+    font-size: 1.1rem;
+}
+.calculator-summary__top {
+    display: flex;
+    align-items: end;
+    justify-content: space-between;
+    gap: 16px;
+}
+.calculator-metrics {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 14px;
+    margin-top: 18px;
+}
+.calculator-metrics div {
+    padding: 16px;
+    border-radius: 18px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+}
+.calculator-metrics span {
+    display: block;
+    color: var(--muted-strong);
+    font-size: 0.78rem;
+}
+.calculator-metrics strong {
+    display: block;
+    margin-top: 10px;
+    font-size: 1.02rem;
+}
+.calculator-summary p {
+    margin: 18px 0 0;
+    color: var(--muted);
+    line-height: 1.8;
+}
+.calculator-actions,
+.funnel-summary__actions,
+.video-modal__fallback-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 22px;
+}
+
+.funnel-steps {
+    display: grid;
+    gap: 16px;
+}
+.funnel-step {
+    padding: 22px;
+    border-radius: 24px;
+    opacity: 0.7;
+    transition: opacity 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+}
+.funnel-step.is-active {
+    opacity: 1;
+    border-color: rgba(125, 232, 242, 0.2);
+    transform: translateY(-2px);
+}
+.funnel-step h3 {
+    margin: 12px 0 10px;
+    font-size: 1.05rem;
+}
+.funnel-step p {
+    margin: 0;
+    color: var(--muted);
+    line-height: 1.75;
+}
+.funnel-choices {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 18px;
+}
+.funnel-choice {
+    min-height: 42px;
+    padding: 0 14px;
+    border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.04);
+    color: var(--text);
+}
+.funnel-choice.is-selected {
+    background: rgba(51, 209, 160, 0.12);
+    border-color: rgba(51, 209, 160, 0.22);
+    color: #bff7e8;
+}
+.funnel-summary h3 {
+    margin: 10px 0 12px;
+    font-size: 1.42rem;
+}
+.funnel-summary p {
+    margin: 0;
+    color: var(--muted);
+    line-height: 1.8;
+}
+.funnel-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 18px;
+}
+.funnel-pills span {
+    display: inline-flex;
+    align-items: center;
+    min-height: 38px;
+    padding: 0 14px;
+    border-radius: 999px;
+    border: 1px solid rgba(180, 255, 236, 0.1);
+    background: rgba(255, 255, 255, 0.04);
+    color: var(--text);
+    font-size: 0.86rem;
+}
+
+.video-modal[hidden] { display: none; }
+.video-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 90;
+}
+.video-modal__backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(3, 8, 8, 0.78);
+    backdrop-filter: blur(14px);
+}
+.video-modal__dialog {
+    position: relative;
+    z-index: 1;
+    width: min(980px, calc(100% - 24px));
+    margin: 48px auto;
+    padding: 20px;
+    border-radius: 32px;
+}
+.video-modal__close {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    width: 42px;
+    height: 42px;
+    border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.04);
+    color: var(--text);
+    font-size: 1.4rem;
+}
+.video-modal__frame {
+    position: relative;
+    aspect-ratio: 16 / 9;
+    border-radius: 24px;
+    overflow: hidden;
+}
+.video-modal__frame iframe {
+    width: 100%;
+    height: 100%;
+    border: 0;
+}
+.video-modal__fallback {
+    display: grid;
+    gap: 18px;
+}
+.video-modal__fallback-copy h3 {
+    margin: 10px 0 12px;
+    font-size: 1.4rem;
+}
+.video-modal__fallback-copy p,
+.video-timeline-card p {
+    margin: 0;
+    color: var(--muted);
+    line-height: 1.75;
+}
+.video-modal__timeline {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 14px;
+}
+.video-timeline-card {
+    padding: 20px;
+    border-radius: 22px;
+}
+.video-timeline-card strong {
+    display: block;
+    margin: 12px 0 10px;
+    font-size: 1rem;
+}
+
 .objection-shell {
     display: grid;
     grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
@@ -1375,6 +1610,8 @@ button, input, select, textarea { font: inherit; }
     .footer-grid,
     .transform-shell,
     .objection-shell,
+    .calculator-grid,
+    .funnel-grid,
     .urgency-banner,
     .final-cta {
         grid-template-columns: 1fr;
@@ -1386,6 +1623,8 @@ button, input, select, textarea { font: inherit; }
     .showcase-list,
     .audience-grid,
     .objection-grid,
+    .calculator-metrics,
+    .video-modal__timeline,
     .problem-grid,
     .benefit-grid,
     .feature-grid,
@@ -1437,6 +1676,7 @@ button, input, select, textarea { font: inherit; }
     .benefit-grid,
     .audience-grid,
     .objection-grid,
+    .calculator-metrics,
     .feature-grid,
     .testimonial-grid,
     .pricing-grid,
@@ -1481,6 +1721,10 @@ button, input, select, textarea { font: inherit; }
     .urgency-banner__action { align-items: flex-start; }
     .final-cta__actions { display: grid; }
     .footer-links { grid-template-columns: 1fr; }
+    .calculator-actions,
+    .funnel-summary__actions,
+    .video-modal__fallback-actions { display: grid; }
+    .video-modal__dialog { margin: 20px auto; }
     .mobile-cta-bar { display: grid; }
     .site-footer { padding-bottom: 104px; }
 }
