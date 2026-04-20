@@ -1,6 +1,6 @@
-<x-app-layout title="Bosh sahifa" pageTitle="Bosh sahifa" pageSubtitle="Bugungi bronlar, tushum, xarajat va ustuvor vazifalarni bir qarashda boshqaring.">
+<x-app-layout title="Bosh sahifa" pageTitle="Bosh sahifa">
     <div class="space-y-6">
-        <x-admin.page-intro eyebrow="Toyxona operatsiyalari" title="Bugungi muhim ko'rsatkichlar" subtitle="Toyxona egasi va operatori uchun eng muhim raqamlar, yaqin tadbirlar va tezkor signal bloklari shu sahifada jamlandi.">
+        <x-admin.page-intro title="Bugungi muhim ko'rsatkichlar">
             <x-slot:actions>
                 <div class="flex flex-wrap gap-2">
                     <a href="{{ route('bookings.create') }}" class="inline-flex items-center gap-2 rounded-2xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-700 dark:bg-white dark:text-slate-950 dark:hover:bg-slate-200">

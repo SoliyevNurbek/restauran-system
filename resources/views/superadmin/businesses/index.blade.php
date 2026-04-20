@@ -37,6 +37,15 @@
                             <a href="{{ route('superadmin.businesses.show', $business) }}" class="rounded-2xl border border-slate-200 px-4 py-3 text-center text-sm font-semibold text-slate-700">Batafsil</a>
                             <a href="{{ route('superadmin.approvals.index', ['status' => $business->status]) }}" class="rounded-2xl bg-slate-950 px-4 py-3 text-center text-sm font-semibold text-white">Workflow</a>
                         </div>
+                        <form method="POST" action="{{ route('superadmin.businesses.destroy', $business) }}" class="mt-3">
+                            @csrf
+                            @method('DELETE')
+                            <button type="submit"
+                                onclick="return confirm('{{ $business->venue_name }} biznesini va unga bog\\'langan barcha ma\\'lumotlarni butunlay o\\'chirishni tasdiqlaysizmi?') && confirm('Bu amal qaytarilmaydi. Baza ichidagi bronlar, mijozlar, to\\'lovlar, foydalanuvchilar va media yozuvlari ham o\\'chadi. Davom etilsinmi?')"
+                                class="w-full rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-700 transition hover:border-rose-300 hover:bg-rose-100">
+                                Biznesni to'liq o'chirish
+                            </button>
+                        </form>
                         <p class="mt-3 text-xs text-slate-500">Yaratilgan: {{ $business->created_at?->format('d.m.Y') }}  -  So'nggi faollik: {{ $business->last_seen_at?->diffForHumans() ?? 'No signal' }}</p>
                     </div>
                 </div>

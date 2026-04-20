@@ -72,6 +72,20 @@
                 </label>
                 <button class="w-full rounded-2xl bg-slate-950 px-5 py-3 text-sm font-semibold text-white">O'zgarishlarni saqlash</button>
             </form>
+
+            <div class="mt-4 rounded-3xl border border-rose-200 bg-rose-50/70 p-4">
+                <p class="text-sm font-semibold text-rose-700">Biznesni bazadan to'liq o'chirish</p>
+                <p class="mt-1 text-sm leading-6 text-rose-600">Bu amal bronlar, mijozlar, billing yozuvlari, foydalanuvchilar va tenantga tegishli media fayllarni ham o'chiradi.</p>
+                <form method="POST" action="{{ route('superadmin.businesses.destroy', $business) }}" class="mt-4">
+                    @csrf
+                    @method('DELETE')
+                    <button type="submit"
+                        onclick="return confirm('{{ $business->venue_name }} biznesini va unga bog\\'langan barcha ma\\'lumotlarni butunlay o\\'chirishni tasdiqlaysizmi?') && confirm('Bu amal qaytarilmaydi. Baza ichidagi bronlar, mijozlar, to\\'lovlar, foydalanuvchilar va media yozuvlari ham o\\'chadi. Davom etilsinmi?')"
+                        class="w-full rounded-2xl bg-rose-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-rose-700">
+                        Biznesni to'liq o'chirish
+                    </button>
+                </form>
+            </div>
         </x-superadmin.panel>
     </div>
 

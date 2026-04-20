@@ -1,0 +1,79 @@
+<svg width="1200" height="900" viewBox="0 0 1200 900" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="84" y1="52" x2="1108" y2="844" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#0F172A"/>
+      <stop offset="0.55" stop-color="#111827"/>
+      <stop offset="1" stop-color="#1E293B"/>
+    </linearGradient>
+    <linearGradient id="card" x1="188" y1="158" x2="932" y2="778" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#1E293B"/>
+      <stop offset="1" stop-color="#0F172A"/>
+    </linearGradient>
+    <linearGradient id="lineA" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#38BDF8"/>
+      <stop offset="1" stop-color="#22C55E"/>
+    </linearGradient>
+    <linearGradient id="lineB" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#F59E0B"/>
+      <stop offset="1" stop-color="#FB7185"/>
+    </linearGradient>
+    <filter id="shadow" x="116" y="108" width="968" height="698" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feFlood flood-opacity="0" result="BackgroundImageFix"/>
+      <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
+      <feOffset dy="18"/>
+      <feGaussianBlur stdDeviation="26"/>
+      <feColorMatrix type="matrix" values="0 0 0 0 0.0208333 0 0 0 0 0.0392157 0 0 0 0 0.0901961 0 0 0 0.28 0"/>
+      <feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow_1_2"/>
+      <feBlend mode="normal" in="SourceGraphic" in2="effect1_dropShadow_1_2" result="shape"/>
+    </filter>
+  </defs>
+  <rect width="1200" height="900" rx="44" fill="url(#bg)"/>
+  <circle cx="1030" cy="116" r="198" fill="#0EA5E9" fill-opacity="0.14"/>
+  <circle cx="164" cy="792" r="226" fill="#10B981" fill-opacity="0.12"/>
+  <g filter="url(#shadow)">
+    <rect x="168" y="142" width="864" height="594" rx="34" fill="url(#card)"/>
+    <rect x="168.75" y="142.75" width="862.5" height="592.5" rx="33.25" stroke="white" stroke-opacity="0.08" stroke-width="1.5"/>
+  </g>
+  <rect x="208" y="186" width="192" height="88" rx="24" fill="white" fill-opacity="0.06"/>
+  <rect x="424" y="186" width="192" height="88" rx="24" fill="white" fill-opacity="0.06"/>
+  <rect x="640" y="186" width="192" height="88" rx="24" fill="white" fill-opacity="0.06"/>
+  <rect x="856" y="186" width="136" height="88" rx="24" fill="#0EA5E9" fill-opacity="0.14"/>
+  <text x="234" y="222" fill="#94A3B8" font-family="Inter, Arial, sans-serif" font-size="20">Monthly revenue</text>
+  <text x="234" y="258" fill="#F8FAFC" font-family="Inter, Arial, sans-serif" font-size="34" font-weight="700">$48.7k</text>
+  <text x="450" y="222" fill="#94A3B8" font-family="Inter, Arial, sans-serif" font-size="20">Occupancy</text>
+  <text x="450" y="258" fill="#F8FAFC" font-family="Inter, Arial, sans-serif" font-size="34" font-weight="700">82%</text>
+  <text x="666" y="222" fill="#94A3B8" font-family="Inter, Arial, sans-serif" font-size="20">Debt control</text>
+  <text x="666" y="258" fill="#F8FAFC" font-family="Inter, Arial, sans-serif" font-size="34" font-weight="700">$4.2k</text>
+  <text x="886" y="222" fill="#BAE6FD" font-family="Inter, Arial, sans-serif" font-size="20">Live</text>
+  <text x="886" y="258" fill="#E0F2FE" font-family="Inter, Arial, sans-serif" font-size="30" font-weight="700">Analytics</text>
+  <rect x="208" y="312" width="514" height="352" rx="28" fill="#020617" fill-opacity="0.42"/>
+  <rect x="748" y="312" width="244" height="164" rx="28" fill="#020617" fill-opacity="0.42"/>
+  <rect x="748" y="500" width="244" height="164" rx="28" fill="#020617" fill-opacity="0.42"/>
+  <path d="M244 594C284 570 326 540 366 520C406 500 448 510 488 470C528 430 570 426 610 384C650 342 682 350 722 328" stroke="url(#lineA)" stroke-width="10" stroke-linecap="round"/>
+  <path d="M244 548C286 560 328 514 370 520C412 526 454 494 496 458C538 422 580 448 622 398C664 348 690 374 722 356" stroke="url(#lineB)" stroke-width="10" stroke-linecap="round" opacity="0.92"/>
+  <path d="M244 624H694" stroke="#334155" stroke-width="2"/>
+  <path d="M244 374V624" stroke="#334155" stroke-width="2"/>
+  <text x="244" y="350" fill="#E2E8F0" font-family="Inter, Arial, sans-serif" font-size="22" font-weight="600">Revenue vs occupancy</text>
+  <text x="244" y="654" fill="#64748B" font-family="Inter, Arial, sans-serif" font-size="18">Jan</text>
+  <text x="346" y="654" fill="#64748B" font-family="Inter, Arial, sans-serif" font-size="18">Feb</text>
+  <text x="448" y="654" fill="#64748B" font-family="Inter, Arial, sans-serif" font-size="18">Mar</text>
+  <text x="550" y="654" fill="#64748B" font-family="Inter, Arial, sans-serif" font-size="18">Apr</text>
+  <text x="652" y="654" fill="#64748B" font-family="Inter, Arial, sans-serif" font-size="18">May</text>
+  <text x="778" y="350" fill="#E2E8F0" font-family="Inter, Arial, sans-serif" font-size="22" font-weight="600">Top channels</text>
+  <rect x="778" y="378" width="184" height="16" rx="8" fill="#1E293B"/>
+  <rect x="778" y="378" width="142" height="16" rx="8" fill="#38BDF8"/>
+  <rect x="778" y="426" width="184" height="16" rx="8" fill="#1E293B"/>
+  <rect x="778" y="426" width="118" height="16" rx="8" fill="#22C55E"/>
+  <rect x="778" y="574" width="184" height="16" rx="8" fill="#1E293B"/>
+  <rect x="778" y="574" width="132" height="16" rx="8" fill="#F59E0B"/>
+  <rect x="778" y="622" width="184" height="16" rx="8" fill="#1E293B"/>
+  <rect x="778" y="622" width="94" height="16" rx="8" fill="#FB7185"/>
+  <text x="778" y="408" fill="#CBD5E1" font-family="Inter, Arial, sans-serif" font-size="18">Instagram leads</text>
+  <text x="778" y="456" fill="#CBD5E1" font-family="Inter, Arial, sans-serif" font-size="18">Telegram bot</text>
+  <text x="778" y="604" fill="#CBD5E1" font-family="Inter, Arial, sans-serif" font-size="18">Direct bookings</text>
+  <text x="778" y="652" fill="#CBD5E1" font-family="Inter, Arial, sans-serif" font-size="18">Partner referrals</text>
+  <text x="904" y="408" fill="#7DD3FC" font-family="Inter, Arial, sans-serif" font-size="16" font-weight="700">77%</text>
+  <text x="904" y="456" fill="#86EFAC" font-family="Inter, Arial, sans-serif" font-size="16" font-weight="700">64%</text>
+  <text x="894" y="604" fill="#FCD34D" font-family="Inter, Arial, sans-serif" font-size="16" font-weight="700">72%</text>
+  <text x="856" y="652" fill="#FDA4AF" font-family="Inter, Arial, sans-serif" font-size="16" font-weight="700">51%</text>
+</svg>

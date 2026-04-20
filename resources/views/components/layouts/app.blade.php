@@ -303,26 +303,7 @@
             ],
         ],
     ];
-    $pageSubtitleText = $pageSubtitle ?? match (true) {
-        request()->routeIs('dashboard') => "Bugungi ishlar, moliyaviy oqim va ustuvor vazifalar bir joyda.",
-        request()->routeIs('bookings.*') => "Bronlar, statuslar va mijoz bilan bog'liq operatsiyalar nazorati.",
-        request()->routeIs('calendar.*') => "Kalendar kesimida bandlik va tadbir yuklamasi nazorati.",
-        request()->routeIs('clients.*') => "Mijozlar bazasi, tarix va aloqalar ko'rinishi.",
-        request()->routeIs('halls.*') => "Zallar, sig'im va bandlik holatini boshqarish paneli.",
-        request()->routeIs('wedding-packages.*') => "Paketlar va xizmat takliflarini boshqarish maydoni.",
-        request()->routeIs('payments.*') => "To'lov oqimi, qarzdorlik va tushum kesimi.",
-        request()->routeIs('purchases.*') => "Kirim hujjatlari va omborga tushgan mahsulotlar nazorati.",
-        request()->routeIs('inventory-expenses.*') => "Xarajatlar, sarf va budjet intizomi ko'rinishi.",
-        request()->routeIs('suppliers.*') => "Ta'minotchilar, balans va tranzaksiyalar holati.",
-        request()->routeIs('billing.payments.*') => "SaaS billing to'lovlari, invoice va provider holati.",
-        request()->routeIs('billing.subscriptions.*') || request()->routeIs('subscriptions.index') => "Joriy obuna, renewal va subscription tarixi.",
-        request()->routeIs('billing.plans.*') || request()->routeIs('plans.index') => "Basic, Pro va Premium tariflarini boshqarish maydoni.",
-        request()->routeIs('products.*') => "Ombordagi mahsulotlar, qoldiq va minimal limitlar.",
-        request()->routeIs('booking-usage-items.*') => "Bronlar bo'yicha mahsulot sarfi va chiqim harakati.",
-        request()->routeIs('reports.*') => "Trendlar, foyda va asosiy biznes ko'rsatkichlari.",
-        request()->routeIs('settings.*') => "Toyxona brendi, aloqa va panel sozlamalari.",
-        default => "Toyxona uchun premium boshqaruv paneli."
-    };
+    $pageSubtitleText = $pageSubtitle;
 @endphp
 
 <div class="min-h-screen" x-data="{
@@ -360,7 +341,6 @@
 
                 <div class="min-w-0 flex-1">
                     <p class="truncate text-base font-semibold leading-tight text-slate-900 dark:text-white">{{ $resolvedSetting?->restaurant_name ?: 'MyRestaurant_SN' }}</p>
-                    <p class="truncate pt-1 text-sm text-slate-500">Toyxona operatsion paneli</p>
                 </div>
             </div>
         </div>
@@ -438,7 +418,9 @@
                             <span>{{ now()->translatedFormat('d M Y') }}</span>
                         </div>
                         <h1 class="mt-1 truncate text-xl font-semibold text-slate-900 dark:text-white">{{ $pageTitle ?? 'Panel' }}</h1>
-                        <p class="mt-1 text-sm text-slate-500">{{ $pageSubtitleText }}</p>
+                        @if(filled($pageSubtitleText))
+                            <p class="mt-1 text-sm text-slate-500">{{ $pageSubtitleText }}</p>
+                        @endif
                     </div>
                 </div>
 

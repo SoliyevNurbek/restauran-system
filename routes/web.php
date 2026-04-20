@@ -144,6 +144,7 @@ Route::middleware(['auth', \App\Http\Middleware\EnsureSuperAdmin::class])
         Route::get('/businesses', [SuperAdminBusinessController::class, 'index'])->name('businesses.index');
         Route::get('/businesses/{business}', [SuperAdminBusinessController::class, 'show'])->name('businesses.show');
         Route::put('/businesses/{business}', [SuperAdminBusinessController::class, 'update'])->name('businesses.update');
+        Route::delete('/businesses/{business}', [SuperAdminBusinessController::class, 'destroy'])->name('businesses.destroy');
         Route::get('/venues', [SuperAdminBusinessController::class, 'index'])->name('venues.index');
         Route::put('/venues/{venueConnection}', [SuperAdminVenueConnectionController::class, 'update'])->name('venues.update');
         Route::post('/venues/{venueConnection}/reset-credentials', [SuperAdminVenueConnectionController::class, 'resetCredentials'])->name('venues.reset-credentials');

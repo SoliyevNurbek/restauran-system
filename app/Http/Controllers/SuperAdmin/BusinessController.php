@@ -11,11 +11,38 @@ use App\Services\SuperAdmin\TelegramNotificationService;
 use App\Services\SuperAdmin\VenueAccessSyncService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\View\View;
 
 class BusinessController extends Controller
 {
+    private const TENANT_DELETE_ORDER = [
+        'booking_usage_items',
+        'booking_services',
+        'payments',
+        'kitchen_costs',
+        'event_costs',
+        'fixed_costs',
+        'supplier_payments',
+        'purchase_items',
+        'expenses',
+        'purchases',
+        'bookings',
+        'wedding_package_images',
+        'wedding_packages',
+        'products',
+        'suppliers',
+        'services',
+        'employees',
+        'expense_categories',
+        'cost_categories',
+        'event_types',
+        'halls',
+        'clients',
+    ];
+
     public function index(Request $request): View
     {
         $search = trim((string) $request->string('q'));
@@ -162,5 +189,188 @@ class BusinessController extends Controller
         );
 
         return back()->with('success', "Biznes ma'lumotlari yangilandi.");
+    }
+
+    public function destroy(
+        Request $request,
+        VenueConnection $business,
+        AuditLogService $audit,
+    ): RedirectResponse {
+        abort_if($business->is_system_workspace, 404);
+
+        $before = $business->only([
+            'venue_name',
+            'owner_name',
+            'username',
+            'email',
+            'phone',
+            'status',
+            'admin_user_id',
+        ]);
+        $businessLabel = $business->venue_name;
+        $businessId = (int) $business->getKey();
+
+        DB::transaction(function () use ($request, $business, $audit, $before, $businessLabel, $businessId): void {
+            $userIds = $this->tenantUserIds($businessId);
+            $mediaFileIds = collect();
+
+            $mediaFileIds = $mediaFileIds
+                ->merge($this->collectSettingMediaFileIds($userIds))
+                ->merge($this->collectMediaAssetFileIds($userIds))
+                ->merge($this->collectTenantMediaFileIds($businessId));
+
+            if (Schema::hasTable('admin_notifications')) {
+                DB::table('admin_notifications')
+                    ->where('related_type', VenueConnection::class)
+                    ->where('related_id', $businessId)
+                    ->delete();
+            }
+
+            if (Schema::hasTable('audit_logs')) {
+                DB::table('audit_logs')
+                    ->where('target_type', VenueConnection::class)
+                    ->where('target_id', $businessId)
+                    ->delete();
+            }
+
+            $audit->record(
+                'business.deleted',
+                $business,
+                $before,
+                ['deleted' => true],
+                'danger',
+                $request,
+                $businessLabel,
+            );
+
+            foreach (self::TENANT_DELETE_ORDER as $table) {
+                $this->deleteTenantRows($table, $businessId);
+            }
+
+            $this->deleteTenantRows('telegram_messages', $businessId);
+            $this->deleteTenantRows('subscription_payments', $businessId);
+            $this->deleteTenantRows('business_subscriptions', $businessId);
+            $this->deleteTenantRows('security_events', $businessId);
+
+            if (Schema::hasTable('media_assets') && Schema::hasColumn('media_assets', 'owner_user_id') && $userIds->isNotEmpty()) {
+                DB::table('media_assets')->whereIn('owner_user_id', $userIds)->delete();
+            }
+
+            if (Schema::hasTable('settings') && Schema::hasColumn('settings', 'user_id') && $userIds->isNotEmpty()) {
+                DB::table('settings')->whereIn('user_id', $userIds)->delete();
+            }
+
+            if (Schema::hasTable('users') && Schema::hasColumn('users', 'venue_connection_id')) {
+                DB::table('users')->where('venue_connection_id', $businessId)->delete();
+            }
+
+            $business->delete();
+
+            if (Schema::hasTable('media_files')) {
+                $mediaFileIds = $mediaFileIds
+                    ->filter(fn ($id) => filled($id))
+                    ->map(fn ($id) => (int) $id)
+                    ->unique()
+                    ->values();
+
+                if ($mediaFileIds->isNotEmpty()) {
+                    DB::table('media_files')->whereIn('id', $mediaFileIds)->delete();
+                }
+            }
+        });
+
+        return redirect()
+            ->route('superadmin.businesses.index')
+            ->with('success', "Biznes to'liq o'chirildi: {$businessLabel}");
+    }
+
+    private function tenantUserIds(int $businessId): Collection
+    {
+        if (! Schema::hasTable('users') || ! Schema::hasColumn('users', 'venue_connection_id')) {
+            return collect();
+        }
+
+        return DB::table('users')
+            ->where('venue_connection_id', $businessId)
+            ->pluck('id');
+    }
+
+    private function collectSettingMediaFileIds(Collection $userIds): Collection
+    {
+        if (! Schema::hasTable('settings') || ! Schema::hasColumn('settings', 'user_id') || $userIds->isEmpty()) {
+            return collect();
+        }
+
+        $fileIds = collect();
+
+        foreach (['logo_media_file_id', 'favicon_media_file_id'] as $column) {
+            if (! Schema::hasColumn('settings', $column)) {
+                continue;
+            }
+
+            $fileIds = $fileIds->merge(
+                DB::table('settings')
+                    ->whereIn('user_id', $userIds)
+                    ->whereNotNull($column)
+                    ->pluck($column)
+            );
+        }
+
+        return $fileIds;
+    }
+
+    private function collectMediaAssetFileIds(Collection $userIds): Collection
+    {
+        if (! Schema::hasTable('media_assets')
+            || ! Schema::hasColumn('media_assets', 'owner_user_id')
+            || ! Schema::hasColumn('media_assets', 'media_file_id')
+            || $userIds->isEmpty()) {
+            return collect();
+        }
+
+        return DB::table('media_assets')
+            ->whereIn('owner_user_id', $userIds)
+            ->whereNotNull('media_file_id')
+            ->pluck('media_file_id');
+    }
+
+    private function collectTenantMediaFileIds(int $businessId): Collection
+    {
+        $mediaFileIds = collect();
+
+        foreach ([
+            'halls' => ['image_media_file_id'],
+            'wedding_packages' => ['image_media_file_id'],
+            'wedding_package_images' => ['media_file_id'],
+            'bookings' => ['package_image_media_file_id'],
+        ] as $table => $columns) {
+            if (! Schema::hasTable($table) || ! Schema::hasColumn($table, 'venue_connection_id')) {
+                continue;
+            }
+
+            foreach ($columns as $column) {
+                if (! Schema::hasColumn($table, $column)) {
+                    continue;
+                }
+
+                $mediaFileIds = $mediaFileIds->merge(
+                    DB::table($table)
+                        ->where('venue_connection_id', $businessId)
+                        ->whereNotNull($column)
+                        ->pluck($column)
+                );
+            }
+        }
+
+        return $mediaFileIds;
+    }
+
+    private function deleteTenantRows(string $table, int $businessId): void
+    {
+        if (! Schema::hasTable($table) || ! Schema::hasColumn($table, 'venue_connection_id')) {
+            return;
+        }
+
+        DB::table($table)->where('venue_connection_id', $businessId)->delete();
     }
 }
