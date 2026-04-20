@@ -69,6 +69,13 @@ $content = [
         'secondary' => '7 kun bepul sinov',
         'tertiary' => 'Tizimni ulash',
         'trust' => ['Bronlar markazlashadi', "Kalendar xatosiz ishlaydi", "Rahbar uchun realtime nazorat"],
+        'video' => [
+            'label' => '30 soniyalik product demo',
+            'title' => "30 soniyada tizim qanday ishlashini ko'ring",
+            'text' => "To'yxona egasi, administrator va menejer uchun eng muhim oqimlar bitta qisqa preview ichida.",
+            'duration' => '00:30',
+            'cta' => "Demo ko'rish",
+        ],
     ],
     'stats' => [
         ['120+', 'Faol zallar'],
@@ -153,6 +160,20 @@ $content = [
         'title' => 'Oddiy va tushunarli narxlar',
         'subtitle' => "To'yxona hajmi va boshqaruv murakkabligiga qarab o'sadigan tariflar.",
         'popular' => 'Eng ommabop',
+    ],
+    'objections' => [
+        'title' => 'Nega hozir boshlash kerak?',
+        'subtitle' => "Registratsiyani ortga surish odatda daromad, lead va operatsion nazorat yo'qotilishi degani.",
+        'items' => [
+            ['Joriy jarayonni buzib yubormaydimi?', "Yo'q. Bosqichma-bosqich onboarding qilinadi, jamoa parallel o'rganadi."],
+            ['Jamoa ishlata oladimi?', "Ha. Administrator, menejer va rahbar uchun interfeys oddiy, ammo professional ko'rinishda qurilgan."],
+            ['Natija qachon seziladi?', "Birinchi haftadanoq band sanalar, lead holati va to'lov nazorati tartibga tushadi."],
+        ],
+        'trust' => [
+            'Demo bilan ko'rsatib beramiz',
+            'Registratsiya va onboarding tez',
+            'Jamoa uchun amaliy moslashuv bor',
+        ],
     ],
     'final' => [
         'title' => 'Tizimni ulashni boshlang',
@@ -324,6 +345,22 @@ $showcaseModules = [
                                 <span>{{ $item }}</span>
                             @endforeach
                         </div>
+
+                        <article class="hero-video-card premium-card" data-reveal>
+                            <div class="hero-video-card__visual">
+                                <span class="hero-video-card__duration">{{ $content['hero']['video']['duration'] }}</span>
+                                <button type="button" class="hero-video-card__play" aria-label="{{ $content['hero']['video']['cta'] }}">
+                                    <span></span>
+                                </button>
+                                <div class="hero-video-card__glow" aria-hidden="true"></div>
+                            </div>
+                            <div class="hero-video-card__copy">
+                                <small>{{ $content['hero']['video']['label'] }}</small>
+                                <strong>{{ $content['hero']['video']['title'] }}</strong>
+                                <p>{{ $content['hero']['video']['text'] }}</p>
+                                <a href="#contact" class="button button--ghost">{{ $content['hero']['video']['cta'] }}</a>
+                            </div>
+                        </article>
                     </div>
 
                     <div class="hero-scene" data-reveal data-parallax-scene>
@@ -749,6 +786,30 @@ $showcaseModules = [
                 </div>
             </section>
 
+            <section class="section-block">
+                <div class="container">
+                    <div class="objection-shell premium-card" data-reveal>
+                        <div class="objection-shell__copy">
+                            <x-landing.section-heading eyebrow="Trust and objections" :title="$content['objections']['title']" :subtitle="$content['objections']['subtitle']" />
+                            <div class="objection-trust">
+                                @foreach ($content['objections']['trust'] as $item)
+                                    <span>{{ $item }}</span>
+                                @endforeach
+                            </div>
+                        </div>
+
+                        <div class="objection-grid">
+                            @foreach ($content['objections']['items'] as [$title, $text])
+                                <article class="objection-card premium-card">
+                                    <h3>{{ $title }}</h3>
+                                    <p>{{ $text }}</p>
+                                </article>
+                            @endforeach
+                        </div>
+                    </div>
+                </div>
+            </section>
+
             <section class="section-block section-block--cta" id="final-cta">
                 <div class="container">
                     <div class="final-cta premium-card" data-reveal>
@@ -826,7 +887,12 @@ $showcaseModules = [
             </div>
         </footer>
 
+        <div class="mobile-cta-bar" aria-label="Mobile quick actions">
+            <a href="#contact" class="button button--secondary">Demo</a>
+            <a href="{{ $registerUrl }}" class="button button--primary">Registratsiya</a>
+        </div>
+
         {{-- 3D: hero dashboard stage, floating KPI cards, pseudo-3D product showcase, layered compare panels. --}}
-        {{-- Animation: sticky glass header, scroll reveal, desktop parallax layers, card tilt, hover lift states. --}}
+        {{-- Animation: sticky glass header, scroll reveal, desktop parallax layers, card tilt, hover lift states, mobile sticky CTA. --}}
     </div>
 </x-layouts.landing>

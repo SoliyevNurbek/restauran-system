@@ -262,6 +262,114 @@ button, input, select, textarea { font: inherit; }
     color: var(--muted);
     font-size: 0.84rem;
 }
+.hero-video-card {
+    display: grid;
+    grid-template-columns: 220px minmax(0, 1fr);
+    gap: 18px;
+    margin-top: 22px;
+    padding: 18px;
+    border-radius: 26px;
+    background:
+        linear-gradient(140deg, rgba(125, 232, 242, 0.05), transparent 30%),
+        rgba(10, 18, 17, 0.78);
+}
+.hero-video-card__visual {
+    position: relative;
+    min-height: 168px;
+    border-radius: 22px;
+    overflow: hidden;
+    background:
+        radial-gradient(circle at 30% 30%, rgba(125, 232, 242, 0.16), transparent 28%),
+        linear-gradient(145deg, rgba(16, 30, 29, 0.98), rgba(8, 14, 13, 0.92));
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+.hero-video-card__visual::before,
+.hero-video-card__visual::after {
+    content: "";
+    position: absolute;
+    border-radius: 18px;
+    border: 1px solid rgba(125, 232, 242, 0.08);
+}
+.hero-video-card__visual::before {
+    inset: 18px 24px 58px 24px;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.04), transparent);
+}
+.hero-video-card__visual::after {
+    left: 24px;
+    right: 24px;
+    bottom: 18px;
+    height: 24px;
+    background: linear-gradient(90deg, rgba(51, 209, 160, 0.14), rgba(24, 183, 198, 0.08));
+}
+.hero-video-card__duration {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    z-index: 2;
+    min-height: 28px;
+    padding: 0 10px;
+    display: inline-flex;
+    align-items: center;
+    border-radius: 999px;
+    background: rgba(5, 12, 12, 0.72);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    color: var(--text);
+    font-size: 0.74rem;
+    font-weight: 700;
+}
+.hero-video-card__play {
+    position: absolute;
+    inset: 0;
+    margin: auto;
+    width: 74px;
+    height: 74px;
+    z-index: 2;
+    border: 0;
+    border-radius: 999px;
+    background: linear-gradient(135deg, rgba(144, 242, 208, 0.92), rgba(31, 182, 196, 0.92));
+    box-shadow: 0 18px 40px rgba(31, 182, 196, 0.22);
+}
+.hero-video-card__play span {
+    display: block;
+    width: 0;
+    height: 0;
+    margin-left: 29px;
+    border-top: 11px solid transparent;
+    border-bottom: 11px solid transparent;
+    border-left: 18px solid #05201b;
+}
+.hero-video-card__glow {
+    position: absolute;
+    inset: auto auto 18px 18px;
+    width: 120px;
+    height: 120px;
+    border-radius: 999px;
+    background: radial-gradient(circle, rgba(51, 209, 160, 0.22), transparent 70%);
+    filter: blur(12px);
+}
+.hero-video-card__copy small,
+.objection-card p,
+.objection-trust span,
+.mobile-cta-bar .button {
+    font-size: 0.86rem;
+}
+.hero-video-card__copy small {
+    display: block;
+    color: var(--muted-strong);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+}
+.hero-video-card__copy strong {
+    display: block;
+    margin-top: 10px;
+    font-size: 1.08rem;
+}
+.hero-video-card__copy p {
+    margin: 12px 0 16px;
+    color: var(--muted);
+    line-height: 1.75;
+}
 
 .hero-scene { position: relative; min-height: 720px; perspective: 1800px; }
 .hero-scene__halo {
@@ -975,6 +1083,49 @@ button, input, select, textarea { font: inherit; }
 }
 .pricing-card .button { margin-top: auto; }
 
+.objection-shell {
+    display: grid;
+    grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+    gap: 24px;
+    padding: 30px;
+    border-radius: 32px;
+}
+.objection-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 16px;
+    align-items: start;
+}
+.objection-card {
+    padding: 22px;
+    border-radius: 24px;
+    background: rgba(255, 255, 255, 0.03);
+}
+.objection-card h3 {
+    margin: 0 0 12px;
+    font-size: 1rem;
+}
+.objection-card p {
+    margin: 0;
+    color: var(--muted);
+    line-height: 1.75;
+}
+.objection-trust {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+.objection-trust span {
+    display: inline-flex;
+    align-items: center;
+    min-height: 38px;
+    padding: 0 14px;
+    border-radius: 999px;
+    border: 1px solid rgba(180, 255, 236, 0.1);
+    background: rgba(255, 255, 255, 0.04);
+    color: var(--text);
+}
+
 .final-cta__actions {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1022,6 +1173,26 @@ button, input, select, textarea { font: inherit; }
     color: var(--muted-strong);
     font-size: 0.88rem;
 }
+.mobile-cta-bar {
+    position: fixed;
+    left: 12px;
+    right: 12px;
+    bottom: 12px;
+    z-index: 70;
+    display: none;
+    grid-template-columns: 1fr 1.2fr;
+    gap: 10px;
+    padding: 10px;
+    border-radius: 20px;
+    border: 1px solid rgba(180, 255, 236, 0.12);
+    background: rgba(6, 12, 11, 0.92);
+    backdrop-filter: blur(16px);
+    box-shadow: var(--shadow-md);
+}
+.mobile-cta-bar .button {
+    min-height: 48px;
+    padding-inline: 14px;
+}
 
 [data-reveal] {
     opacity: 0;
@@ -1046,6 +1217,7 @@ button, input, select, textarea { font: inherit; }
     .contact-grid-wrap,
     .footer-grid,
     .transform-shell,
+    .objection-shell,
     .urgency-banner,
     .final-cta {
         grid-template-columns: 1fr;
@@ -1056,6 +1228,7 @@ button, input, select, textarea { font: inherit; }
     .pricing-stack,
     .showcase-list,
     .audience-grid,
+    .objection-grid,
     .problem-grid,
     .benefit-grid,
     .feature-grid,
@@ -1085,6 +1258,7 @@ button, input, select, textarea { font: inherit; }
     .mobile-toggle { display: inline-block; }
     .hero-grid { grid-template-columns: 1fr; }
     .hero-copy { padding-bottom: 20px; }
+    .hero-video-card { grid-template-columns: 1fr; }
 }
 
 @media (max-width: 760px) {
@@ -1102,6 +1276,7 @@ button, input, select, textarea { font: inherit; }
     .problem-grid,
     .benefit-grid,
     .audience-grid,
+    .objection-grid,
     .feature-grid,
     .testimonial-grid,
     .pricing-grid,
@@ -1143,4 +1318,6 @@ button, input, select, textarea { font: inherit; }
     .urgency-banner__action { align-items: flex-start; }
     .final-cta__actions { display: grid; }
     .footer-links { grid-template-columns: 1fr; }
+    .mobile-cta-bar { display: grid; }
+    .site-footer { padding-bottom: 104px; }
 }
