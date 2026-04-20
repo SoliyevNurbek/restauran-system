@@ -35,4 +35,8 @@ return [
         ],
     ],
 
+    'landing' => [
+        'demo_video_embed' => env('LANDING_DEMO_VIDEO_EMBED'),
+    ],
+
 ];

@@ -22,6 +22,15 @@ class RegisterRequest extends FormRequest
             'phone' => $this->normalizeNullable('phone'),
             'restaurant_name' => trim((string) $this->input('restaurant_name', '')),
             'message' => $this->normalizeNullable('message'),
+            'source' => $this->normalizeNullable('source'),
+            'entry_point' => $this->normalizeNullable('entry_point'),
+            'selected_plan' => $this->normalizeNullable('selected_plan'),
+            'recommended_plan' => $this->normalizeNullable('recommended_plan'),
+            'selected_role' => $this->normalizeNullable('selected_role'),
+            'selected_scale' => $this->normalizeNullable('selected_scale'),
+            'selected_timing' => $this->normalizeNullable('selected_timing'),
+            'halls_count' => $this->normalizeNullable('halls_count'),
+            'monthly_leads' => $this->normalizeNullable('monthly_leads'),
         ]);
     }
 
@@ -34,6 +43,15 @@ class RegisterRequest extends FormRequest
             'phone' => ['nullable', 'string', 'max:50', 'regex:/^\+?[0-9\s\-\(\)]{7,20}$/'],
             'restaurant_name' => ['required', 'string', 'max:255'],
             'message' => ['nullable', 'string', 'max:1000'],
+            'source' => ['nullable', 'string', 'max:50'],
+            'entry_point' => ['nullable', 'string', 'max:50'],
+            'selected_plan' => ['nullable', 'string', 'max:50'],
+            'recommended_plan' => ['nullable', 'string', 'max:50'],
+            'selected_role' => ['nullable', 'string', 'max:50'],
+            'selected_scale' => ['nullable', 'string', 'max:50'],
+            'selected_timing' => ['nullable', 'string', 'max:50'],
+            'halls_count' => ['nullable', 'integer', 'min:1', 'max:99'],
+            'monthly_leads' => ['nullable', 'integer', 'min:0', 'max:100000'],
             'password' => [
                 'required',
                 'string',

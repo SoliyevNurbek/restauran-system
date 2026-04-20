@@ -223,6 +223,80 @@
             'confirm_invalid' => "Parol tasdig'i mos kelmadi.",
         ],
     };
+    $registrationContext = [
+        'source' => old('source', request('source')),
+        'entry_point' => old('entry_point', request('entry_point')),
+        'selected_plan' => old('selected_plan', request('selected_plan')),
+        'recommended_plan' => old('recommended_plan', request('recommended_plan')),
+        'halls_count' => old('halls_count', request('halls_count')),
+        'monthly_leads' => old('monthly_leads', request('monthly_leads')),
+        'selected_role' => old('selected_role', request('selected_role')),
+        'selected_scale' => old('selected_scale', request('selected_scale')),
+        'selected_timing' => old('selected_timing', request('selected_timing')),
+    ];
+    $hasRegistrationContext = collect($registrationContext)->filter(fn ($value) => filled($value))->isNotEmpty();
+    $contextLabels = [
+        'selected_plan' => match ($locale) {
+            'en' => 'Selected plan',
+            default => 'Tanlangan plan',
+        },
+        'recommended_plan' => match ($locale) {
+            'en' => 'Recommended plan',
+            default => 'Tavsiya plan',
+        },
+        'halls_count' => match ($locale) {
+            'en' => 'Halls',
+            default => 'Zallar soni',
+        },
+        'monthly_leads' => match ($locale) {
+            'en' => 'Monthly leads',
+            default => 'Oylik lead',
+        },
+        'selected_role' => match ($locale) {
+            'en' => 'Role',
+            default => 'Rol',
+        },
+        'selected_scale' => match ($locale) {
+            'en' => 'Scale',
+            default => 'Setup',
+        },
+        'selected_timing' => match ($locale) {
+            'en' => 'Start timing',
+            default => 'Boshlash vaqti',
+        },
+    ];
+    $contextValueMaps = [
+        'selected_role' => [
+            'owner' => match ($locale) { 'en' => 'Owner', default => "To'yxona egasi" },
+            'admin' => match ($locale) { 'en' => 'Administrator', default => 'Administrator' },
+            'manager' => match ($locale) { 'en' => 'Manager', default => 'Menejer' },
+        ],
+        'selected_scale' => [
+            'compact' => 'Compact',
+            'growth' => 'Growth',
+            'scale' => 'Scale',
+        ],
+        'selected_timing' => [
+            'now' => match ($locale) { 'en' => 'This week', default => 'Shu hafta' },
+            'month' => match ($locale) { 'en' => 'This month', default => 'Shu oy' },
+            'later' => match ($locale) { 'en' => 'Planned', default => 'Rejalashtirilgan' },
+        ],
+    ];
+    $formatContextValue = static function (string $key, mixed $value) use ($contextValueMaps, $locale): string {
+        if (! filled($value)) {
+            return '';
+        }
+
+        if (isset($contextValueMaps[$key][$value])) {
+            return $contextValueMaps[$key][$value];
+        }
+
+        return match ($key) {
+            'halls_count' => $value.' ta zal',
+            'monthly_leads' => $value.' lead / oy',
+            default => (string) $value,
+        };
+    };
 @endphp
 
 <x-layouts.guest :title="$t('auth_register_page_title', $copy['page_title']).' | '.$restaurantName">
@@ -255,6 +329,25 @@
     .register-brand p { margin: 4px 0 0; font-size: .78rem; letter-spacing: .12em; text-transform: uppercase; color: rgba(255,255,255,.5); }
     .register-copy h2 { margin: 18px 0 14px; font-family: 'Playfair Display', serif; font-size: clamp(2rem, 3vw, 3rem); line-height: 1.12; }
     .register-copy p { margin: 0; max-width: 420px; line-height: 1.75; color: rgba(255,255,255,.68); }
+    .register-context-card {
+        margin-bottom: 20px; padding: 18px 18px 16px; border-radius: 20px;
+        border: 1px solid rgba(61,153,84,.18); background: linear-gradient(180deg, #f6fbf7 0%, #eef5f0 100%);
+        box-shadow: 0 16px 34px rgba(16, 37, 25, .08);
+    }
+    .register-context-card small {
+        display: inline-flex; align-items: center; gap: 8px; margin-bottom: 10px;
+        font-size: .72rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: #2f7a45;
+    }
+    .register-context-card h3 { margin: 0 0 8px; color: #12311e; font-size: 1rem; }
+    .register-context-card p { margin: 0; color: #597065; font-size: .9rem; line-height: 1.6; }
+    .register-context-grid {
+        margin-top: 14px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px;
+    }
+    .register-context-item {
+        padding: 12px 13px; border-radius: 16px; background: rgba(255,255,255,.7); border: 1px solid rgba(47,122,69,.08);
+    }
+    .register-context-item span { display: block; margin-bottom: 4px; font-size: .72rem; color: #6c8378; }
+    .register-context-item strong { color: #183b25; font-size: .92rem; }
     .register-feature-list { display: grid; gap: 12px; margin-top: 34px; }
     .register-feature { border: 1px solid rgba(255,255,255,.08); background: rgba(255,255,255,.05); border-radius: 18px; padding: 16px 18px; }
     .register-feature strong { display: block; margin-bottom: 6px; }
@@ -351,6 +444,7 @@
     }
     @media (max-width: 640px) {
         .register-grid.two { grid-template-columns: 1fr; }
+        .register-context-grid { grid-template-columns: 1fr; }
     }
 </style>
 
@@ -396,8 +490,29 @@
                 <div class="register-alert error">{{ $errors->first() }}</div>
             @endif
 
+            @if ($hasRegistrationContext)
+                <div class="register-context-card">
+                    <small>{{ $locale === 'en' ? 'Landing recommendation' : 'Landing tavsiyasi' }}</small>
+                    <h3>{{ $locale === 'en' ? 'Your onboarding path is prefilled' : "Siz uchun onboarding yo'li tayyorlandi" }}</h3>
+                    <p>{{ $locale === 'en' ? 'Continue registration with the plan and setup signals selected on the landing page.' : "Landing sahifasida tanlangan plan, setup va start signallari registratsiyaga olib o'tildi." }}</p>
+                    <div class="register-context-grid">
+                        @foreach (['selected_plan', 'recommended_plan', 'halls_count', 'monthly_leads', 'selected_role', 'selected_scale', 'selected_timing'] as $contextKey)
+                            @if (filled($registrationContext[$contextKey]))
+                                <div class="register-context-item">
+                                    <span>{{ $contextLabels[$contextKey] }}</span>
+                                    <strong>{{ $formatContextValue($contextKey, $registrationContext[$contextKey]) }}</strong>
+                                </div>
+                            @endif
+                        @endforeach
+                    </div>
+                </div>
+            @endif
+
             <form method="POST" action="{{ route('register.store', ['lang' => $locale]) }}" class="register-grid" id="registerForm">
                 @csrf
+                @foreach ($registrationContext as $contextKey => $contextValue)
+                    <input type="hidden" name="{{ $contextKey }}" value="{{ $contextValue }}">
+                @endforeach
 
                 <div class="register-grid two">
                     <div class="register-field">

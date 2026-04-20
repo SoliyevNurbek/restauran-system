@@ -19,6 +19,7 @@ $langText = static fn (string $key, string $default) => filled($langPack->get($k
 $loginUrl = Route::has('login') ? route('login', ['lang' => $locale]) : '#';
 $registerUrl = Route::has('register') ? route('register', ['lang' => $locale]) : '#';
 $landingUrl = Route::has('landing') ? route('landing', ['lang' => $locale]) : url('/');
+$demoVideoEmbed = config('services.landing.demo_video_embed');
 
 $formatMoney = static function (float|int|string $amount, string $currency = 'UZS'): string {
     $amount = (float) $amount;
@@ -75,7 +76,7 @@ $content = [
             'text' => "To'yxona egasi, administrator va menejer uchun eng muhim oqimlar bitta qisqa preview ichida.",
             'duration' => '00:30',
             'cta' => "Demo ko'rish",
-            'embed' => null,
+            'embed' => filled($demoVideoEmbed) ? $demoVideoEmbed : null,
         ],
     ],
     'stats' => [
@@ -357,7 +358,7 @@ $demoFunnelSteps = [
 
                 <div class="site-actions">
                     <a href="{{ $loginUrl }}" class="button button--ghost">{{ $langText('landing_nav_login', 'Kirish') }}</a>
-                    <a href="{{ $registerUrl }}" class="button button--primary">{{ $langText('landing_nav_register', "Ro'yxatdan o'tish") }}</a>
+                    <a href="{{ $registerUrl }}" class="button button--primary" data-register-link data-entry-point="navbar">{{ $langText('landing_nav_register', "Ro'yxatdan o'tish") }}</a>
                 </div>
 
                 <button class="mobile-toggle" type="button" aria-expanded="false" aria-label="Toggle menu" data-mobile-toggle>
@@ -380,7 +381,7 @@ $demoFunnelSteps = [
                         <div class="hero-actions">
                             <a href="#contact" class="button button--primary button--large">{{ $content['hero']['primary'] }}</a>
                             <a href="#final-cta" class="button button--secondary button--large">{{ $content['hero']['secondary'] }}</a>
-                            <a href="{{ $registerUrl }}" class="button button--ghost button--large">{{ $content['hero']['tertiary'] }}</a>
+                            <a href="{{ $registerUrl }}" class="button button--ghost button--large" data-register-link data-entry-point="hero">{{ $content['hero']['tertiary'] }}</a>
                         </div>
 
                         <div class="hero-trust">
@@ -788,7 +789,7 @@ $demoFunnelSteps = [
                                         <li>{{ $item }}</li>
                                     @endforeach
                                 </ul>
-                                <a href="{{ $registerUrl }}" class="button button--ghost">Registratsiyani boshlash</a>
+                                <a href="{{ $registerUrl }}" class="button button--ghost" data-register-link data-entry-point="audience">Registratsiyani boshlash</a>
                             </article>
                         @endforeach
                     </div>
@@ -909,7 +910,7 @@ $demoFunnelSteps = [
                                 </div>
                                 <p data-calc-note>Ko'proq zal va yuqori bron oqimi uchun chuqur analytics va multi-hall nazorat tavsiya qilinadi.</p>
                                 <div class="calculator-actions">
-                                    <a href="{{ $registerUrl }}" class="button button--primary">Registratsiya</a>
+                                    <a href="{{ $registerUrl }}" class="button button--primary" data-register-link data-entry-point="calculator">Registratsiya</a>
                                     <a href="#contact" class="button button--ghost">Demo olish</a>
                                 </div>
                             </article>
@@ -960,7 +961,7 @@ $demoFunnelSteps = [
                                 </div>
                                 <div class="funnel-summary__actions">
                                     <a href="#contact" class="button button--primary" data-funnel-primary>Demo bron qilish</a>
-                                    <a href="{{ $registerUrl }}" class="button button--ghost" data-funnel-secondary>Registratsiya</a>
+                                    <a href="{{ $registerUrl }}" class="button button--ghost" data-register-link data-entry-point="funnel" data-funnel-secondary>Registratsiya</a>
                                 </div>
                             </aside>
                         </div>
@@ -1010,7 +1011,7 @@ $demoFunnelSteps = [
                             <a href="#contact" class="button button--primary">{{ $content['final']['buttons'][0] }}</a>
                             <a href="#contact" class="button button--secondary">{{ $content['final']['buttons'][1] }}</a>
                             <a href="#contact" class="button button--ghost">{{ $content['final']['buttons'][2] }}</a>
-                            <a href="{{ $registerUrl }}" class="button button--primary button--soft">{{ $content['final']['buttons'][3] }}</a>
+                            <a href="{{ $registerUrl }}" class="button button--primary button--soft" data-register-link data-entry-point="final-cta">{{ $content['final']['buttons'][3] }}</a>
                             <a href="#contact" class="button button--ghost">{{ $content['final']['buttons'][4] }}</a>
                         </div>
                     </div>
@@ -1060,7 +1061,7 @@ $demoFunnelSteps = [
                     <a href="#pricing">Narxlar</a>
                     <a href="#contact">Bog'lanish</a>
                     <a href="{{ $loginUrl }}">Kirish</a>
-                    <a href="{{ $registerUrl }}">Ro'yxatdan o'tish</a>
+                    <a href="{{ $registerUrl }}" data-register-link data-entry-point="footer">Ro'yxatdan o'tish</a>
                 </div>
             </div>
 
@@ -1071,7 +1072,7 @@ $demoFunnelSteps = [
 
         <div class="mobile-cta-bar" aria-label="Mobile quick actions">
             <a href="#contact" class="button button--secondary">Demo</a>
-            <a href="{{ $registerUrl }}" class="button button--primary">Registratsiya</a>
+            <a href="{{ $registerUrl }}" class="button button--primary" data-register-link data-entry-point="mobile-bar">Registratsiya</a>
         </div>
 
         <div class="video-modal" data-video-modal hidden aria-hidden="true">
@@ -1116,7 +1117,7 @@ $demoFunnelSteps = [
                         </div>
                         <div class="video-modal__fallback-actions">
                             <a href="#contact" class="button button--primary">Live demo so'rash</a>
-                            <a href="{{ $registerUrl }}" class="button button--ghost">Registratsiya</a>
+                            <a href="{{ $registerUrl }}" class="button button--ghost" data-register-link data-entry-point="video-modal">Registratsiya</a>
                         </div>
                     </div>
                 @endif

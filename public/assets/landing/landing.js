@@ -4,6 +4,39 @@ const mobileNav = document.querySelector('[data-mobile-nav]');
 const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 const videoModal = document.querySelector('[data-video-modal]');
 const videoEmbed = document.querySelector('[data-video-embed]');
+const registerLinks = document.querySelectorAll('[data-register-link]');
+const registrationContext = {
+    source: 'landing',
+    entry_point: 'landing',
+    selected_plan: 'Pro',
+    recommended_plan: 'Pro',
+    halls_count: '2',
+    monthly_leads: '70',
+    selected_role: 'owner',
+    selected_scale: 'growth',
+    selected_timing: 'now',
+};
+
+const syncRegisterLinks = () => {
+    registerLinks.forEach((link) => {
+        const href = link.getAttribute('href');
+
+        if (!href || href.startsWith('#')) return;
+
+        const url = new URL(href, window.location.origin);
+        const linkContext = {
+            ...registrationContext,
+            entry_point: link.dataset.entryPoint || registrationContext.entry_point,
+        };
+
+        Object.entries(linkContext).forEach(([key, value]) => {
+            if (!value) return;
+            url.searchParams.set(key, value);
+        });
+
+        link.href = url.toString();
+    });
+};
 
 const syncHeader = () => {
     if (!header) return;
@@ -11,6 +44,7 @@ const syncHeader = () => {
 };
 
 syncHeader();
+syncRegisterLinks();
 window.addEventListener('scroll', syncHeader, { passive: true });
 
 if (mobileToggle && mobileNav) {
@@ -169,6 +203,12 @@ document.querySelectorAll('[data-pricing-calculator]').forEach((calculator) => {
         yearlyOutput.textContent = formatUzs(selectedPlan.amount * 12);
         recoveredOutput.textContent = `${recovered} lead`;
         noteOutput.textContent = `${recommendedPlan.name} tavsiyasi ${halls} ta zal va ${leads} ta oylik lead oqimi uchun eng mos operatsion nazoratni beradi.`;
+
+        registrationContext.selected_plan = selectedPlan.name;
+        registrationContext.recommended_plan = recommendedPlan.name;
+        registrationContext.halls_count = String(halls);
+        registrationContext.monthly_leads = String(leads);
+        syncRegisterLinks();
     };
 
     [hallsInput, leadsInput, planSelect].forEach((field) => field.addEventListener('input', syncCalculator));
@@ -210,6 +250,11 @@ document.querySelectorAll('[data-demo-funnel]').forEach((funnel) => {
         timingPill.textContent = timingMap[state[2]] || 'Shu hafta';
         primary.textContent = state[2] === 'later' ? "Konsultatsiya olish" : "Demo bron qilish";
         secondary.textContent = state[2] === 'later' ? "Registratsiyani ko'rish" : 'Registratsiya';
+
+        registrationContext.selected_role = state[0];
+        registrationContext.selected_scale = state[1];
+        registrationContext.selected_timing = state[2];
+        syncRegisterLinks();
     };
 
     funnel.querySelectorAll('[data-funnel-choice]').forEach((choice) => {

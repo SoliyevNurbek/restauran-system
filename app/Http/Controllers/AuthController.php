@@ -66,12 +66,14 @@ class AuthController extends Controller
             }
 
             DB::transaction(function () use ($data, $notifications, $telegram) {
+                $registrationMessage = $this->combineRegistrationMessage($data);
+
                 $venue = VenueConnection::create([
                     'venue_name' => $data['restaurant_name'],
                     'owner_name' => trim($data['first_name'].' '.$data['last_name']),
                     'username' => $data['username'],
                     'phone' => $data['phone'] ?? null,
-                    'message' => $data['message'] ?? null,
+                    'message' => $registrationMessage,
                     'status' => 'pending',
                     'health_status' => 'new',
                 ]);
@@ -380,5 +382,39 @@ class AuthController extends Controller
         ];
 
         return $messages[$locale][$key] ?? $messages['uz'][$key] ?? $key;
+    }
+
+    private function combineRegistrationMessage(array $data): ?string
+    {
+        $baseMessage = trim((string) ($data['message'] ?? ''));
+        $contextMap = [
+            'Source' => $data['source'] ?? null,
+            'Entry point' => $data['entry_point'] ?? null,
+            'Selected plan' => $data['selected_plan'] ?? null,
+            'Recommended plan' => $data['recommended_plan'] ?? null,
+            'Halls' => $data['halls_count'] ?? null,
+            'Monthly leads' => $data['monthly_leads'] ?? null,
+            'Role' => $data['selected_role'] ?? null,
+            'Scale' => $data['selected_scale'] ?? null,
+            'Timing' => $data['selected_timing'] ?? null,
+        ];
+
+        $contextLines = collect($contextMap)
+            ->filter(fn ($value) => filled($value))
+            ->map(fn ($value, $label) => $label.': '.$value)
+            ->values()
+            ->all();
+
+        if ($baseMessage === '' && $contextLines === []) {
+            return null;
+        }
+
+        if ($contextLines === []) {
+            return $baseMessage;
+        }
+
+        $contextBlock = "Landing context:\n".implode("\n", $contextLines);
+
+        return trim($baseMessage !== '' ? $baseMessage."\n\n".$contextBlock : $contextBlock);
     }
 }
