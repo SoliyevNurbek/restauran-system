@@ -286,6 +286,7 @@ $showcaseModules = [
 
 <x-layouts.landing :title="$content['meta_title']" :description="$content['meta_description']">
     <div class="landing-shell">
+        <div class="grid-guide" aria-hidden="true"></div>
         <div class="ambient ambient--one" aria-hidden="true"></div>
         <div class="ambient ambient--two" aria-hidden="true"></div>
         <div class="ambient ambient--three" aria-hidden="true"></div>
@@ -346,6 +347,21 @@ $showcaseModules = [
                             @endforeach
                         </div>
 
+                        <div class="hero-proof-strip premium-card" data-reveal>
+                            <div class="hero-proof-strip__item">
+                                <small>Control layer</small>
+                                <strong>Owners</strong>
+                            </div>
+                            <div class="hero-proof-strip__item">
+                                <small>Execution layer</small>
+                                <strong>Admins</strong>
+                            </div>
+                            <div class="hero-proof-strip__item">
+                                <small>Growth layer</small>
+                                <strong>Managers</strong>
+                            </div>
+                        </div>
+
                         <article class="hero-video-card premium-card" data-reveal>
                             <div class="hero-video-card__visual">
                                 <span class="hero-video-card__duration">{{ $content['hero']['video']['duration'] }}</span>
@@ -364,8 +380,14 @@ $showcaseModules = [
                     </div>
 
                     <div class="hero-scene" data-reveal data-parallax-scene>
+                        {{-- 3D effect: layered glow/orb background for dashboard stage depth. --}}
+                        <div class="hero-scene__grid" aria-hidden="true"></div>
                         <div class="hero-scene__halo" aria-hidden="true"></div>
+                        <div class="hero-scene__orb hero-scene__orb--one" data-depth="10" aria-hidden="true"></div>
+                        <div class="hero-scene__orb hero-scene__orb--two" data-depth="-14" aria-hidden="true"></div>
+                        <div class="hero-scene__plate hero-scene__plate--back" data-depth="-8" aria-hidden="true"></div>
 
+                        {{-- 3D effect: main dashboard plane uses perspective tilt and floating support cards. --}}
                         <article class="dashboard-stage premium-card" data-tilt>
                             <div class="dashboard-stage__top">
                                 <div class="window-dots" aria-hidden="true">
@@ -447,6 +469,7 @@ $showcaseModules = [
                             </div>
                         </article>
 
+                        {{-- 3D effect: floating cards sit on separate z-layers for parallax depth. --}}
                         <article class="floating-card floating-card--revenue premium-card" data-depth="-10">
                             <small>Oylik tushum</small>
                             <strong>$48.7k</strong>
@@ -463,6 +486,12 @@ $showcaseModules = [
                             <small>Qarzdorlik</small>
                             <strong>$4.2k</strong>
                             <span>-21% kamaydi</span>
+                        </article>
+
+                        <article class="floating-card floating-card--pipeline premium-card" data-depth="9">
+                            <small>Pipeline</small>
+                            <strong>61 lead</strong>
+                            <span>Bugungi savdo oqimi</span>
                         </article>
                     </div>
                 </div>
@@ -546,9 +575,9 @@ $showcaseModules = [
                     <div class="showcase-copy" data-reveal>
                         <x-landing.section-heading eyebrow="Product showcase" :title="$content['solution']['title']" :subtitle="$content['solution']['subtitle']" />
 
-                        <div class="showcase-list">
+                        <div class="showcase-list showcase-list--bento">
                             @foreach ($content['solution']['items'] as [$title, $text])
-                                <article class="showcase-item premium-card">
+                                <article class="showcase-item showcase-item--{{ $loop->index === 0 ? 'wide' : ($loop->index === 3 ? 'accent' : 'default') }} premium-card">
                                     <h3>{{ $title }}</h3>
                                     <p>{{ $text }}</p>
                                 </article>

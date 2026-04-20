@@ -45,6 +45,7 @@ if (prefersReducedMotion) {
 }
 
 if (!prefersReducedMotion) {
+    // 3D effect: soft parallax shifts layered hero elements by depth value.
     document.querySelectorAll('[data-parallax-scene]').forEach((scene) => {
         const layers = scene.querySelectorAll('[data-depth]');
 
@@ -70,6 +71,7 @@ if (!prefersReducedMotion) {
         });
     });
 
+    // 3D effect: subtle tilt keeps dashboard/product cards tactile without toy-like motion.
     document.querySelectorAll('[data-tilt]').forEach((card) => {
         const limit = 10;
 
