@@ -1,28 +1,22 @@
 const header = document.querySelector('[data-site-header]');
 const mobileToggle = document.querySelector('[data-mobile-toggle]');
 const mobileNav = document.querySelector('[data-mobile-nav]');
-const desktopActions = document.querySelector('.shell--header > .header-actions');
+const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-const syncHeaderState = () => {
+const syncHeader = () => {
     if (!header) return;
-    header.classList.toggle('is-scrolled', window.scrollY > 12);
+    header.classList.toggle('is-scrolled', window.scrollY > 10);
 };
 
-syncHeaderState();
-window.addEventListener('scroll', syncHeaderState, { passive: true });
+syncHeader();
+window.addEventListener('scroll', syncHeader, { passive: true });
 
 if (mobileToggle && mobileNav) {
-    if (desktopActions && !mobileNav.querySelector('.header-actions--mobile')) {
-        const mobileActions = desktopActions.cloneNode(true);
-        mobileActions.classList.add('header-actions--mobile');
-        mobileNav.appendChild(mobileActions);
-    }
-
     mobileToggle.addEventListener('click', () => {
-        const expanded = mobileToggle.getAttribute('aria-expanded') === 'true';
-        mobileToggle.setAttribute('aria-expanded', expanded ? 'false' : 'true');
-        mobileToggle.classList.toggle('is-active', !expanded);
-        mobileNav.classList.toggle('is-open', !expanded);
+        const isOpen = mobileToggle.getAttribute('aria-expanded') === 'true';
+        mobileToggle.setAttribute('aria-expanded', isOpen ? 'false' : 'true');
+        mobileToggle.classList.toggle('is-active', !isOpen);
+        mobileNav.classList.toggle('is-open', !isOpen);
     });
 
     mobileNav.querySelectorAll('a').forEach((link) => {
@@ -34,15 +28,63 @@ if (mobileToggle && mobileNav) {
     });
 }
 
-document.querySelectorAll('[data-faq-trigger]').forEach((trigger) => {
-    trigger.addEventListener('click', () => {
-        const item = trigger.closest('[data-faq-item]');
-        const panel = item?.querySelector('[data-faq-panel]');
-        const expanded = trigger.getAttribute('aria-expanded') === 'true';
+const revealItems = document.querySelectorAll('[data-reveal]');
 
-        if (!panel) return;
+if (prefersReducedMotion) {
+    revealItems.forEach((item) => item.classList.add('is-visible'));
+} else {
+    const revealObserver = new IntersectionObserver((entries, observer) => {
+        entries.forEach((entry) => {
+            if (!entry.isIntersecting) return;
+            entry.target.classList.add('is-visible');
+            observer.unobserve(entry.target);
+        });
+    }, { threshold: 0.16 });
 
-        trigger.setAttribute('aria-expanded', expanded ? 'false' : 'true');
-        panel.hidden = expanded;
+    revealItems.forEach((item) => revealObserver.observe(item));
+}
+
+if (!prefersReducedMotion) {
+    document.querySelectorAll('[data-parallax-scene]').forEach((scene) => {
+        const layers = scene.querySelectorAll('[data-depth]');
+
+        if (!layers.length) return;
+
+        scene.addEventListener('mousemove', (event) => {
+            const rect = scene.getBoundingClientRect();
+            const offsetX = (event.clientX - rect.left) / rect.width - 0.5;
+            const offsetY = (event.clientY - rect.top) / rect.height - 0.5;
+
+            layers.forEach((layer) => {
+                const depth = Number(layer.getAttribute('data-depth')) || 0;
+                const moveX = offsetX * depth;
+                const moveY = offsetY * depth;
+                layer.style.transform = `translate3d(${moveX}px, ${moveY}px, 0) rotate(${depth > 0 ? 1 : -1}deg)`;
+            });
+        });
+
+        scene.addEventListener('mouseleave', () => {
+            layers.forEach((layer) => {
+                layer.style.transform = '';
+            });
+        });
     });
-});
+
+    document.querySelectorAll('[data-tilt]').forEach((card) => {
+        const limit = 10;
+
+        card.addEventListener('mousemove', (event) => {
+            const rect = card.getBoundingClientRect();
+            const px = (event.clientX - rect.left) / rect.width - 0.5;
+            const py = (event.clientY - rect.top) / rect.height - 0.5;
+            const rotateY = px * limit;
+            const rotateX = py * -limit;
+
+            card.style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg) translateY(-2px)`;
+        });
+
+        card.addEventListener('mouseleave', () => {
+            card.style.transform = '';
+        });
+    });
+}

@@ -6,16 +6,16 @@
 ])
 
 <div {{ $attributes->class([
-    'section-heading',
-    'section-heading--center' => $align === 'center',
+    'landing-section-heading',
+    'landing-section-heading--center' => $align === 'center',
 ]) }}>
-    @if($eyebrow)
-        <span class="section-heading__eyebrow">{{ $eyebrow }}</span>
+    @if ($eyebrow)
+        <span class="landing-section-heading__eyebrow">{{ $eyebrow }}</span>
     @endif
 
-    <h2 class="section-heading__title">{{ $title }}</h2>
+    <h2 class="landing-section-heading__title">{{ $title }}</h2>
 
-    @if($subtitle)
-        <p class="section-heading__subtitle">{{ $subtitle }}</p>
+    @if ($subtitle)
+        <p class="landing-section-heading__subtitle">{{ $subtitle }}</p>
     @endif
 </div>

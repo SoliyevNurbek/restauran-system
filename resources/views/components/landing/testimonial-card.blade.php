@@ -4,8 +4,9 @@
     'role',
 ])
 
-<article {{ $attributes->class('landing-card testimonial-card') }}>
-    <p class="testimonial-card__quote">“{{ $quote }}”</p>
+<article {{ $attributes->class('testimonial-card premium-card') }}>
+    <div class="testimonial-card__stars" aria-hidden="true">*****</div>
+    <p class="testimonial-card__quote">"{{ $quote }}"</p>
     <div class="testimonial-card__meta">
         <strong>{{ $author }}</strong>
         <span>{{ $role }}</span>
