@@ -170,7 +170,7 @@ $content = [
             ['Natija qachon seziladi?', "Birinchi haftadanoq band sanalar, lead holati va to'lov nazorati tartibga tushadi."],
         ],
         'trust' => [
-            'Demo bilan ko'rsatib beramiz',
+            "Demo bilan ko'rsatib beramiz",
             'Registratsiya va onboarding tez',
             'Jamoa uchun amaliy moslashuv bor',
         ],
