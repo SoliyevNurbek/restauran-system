@@ -1,0 +1,44 @@
+<svg width="1200" height="900" viewBox="0 0 1200 900" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="84" y1="48" x2="1118" y2="842" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFF7ED"/>
+      <stop offset="1" stop-color="#FFEDD5"/>
+    </linearGradient>
+    <linearGradient id="panel" x1="206" y1="146" x2="986" y2="748" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFFFFF"/>
+      <stop offset="1" stop-color="#FFF7ED"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#F97316"/>
+      <stop offset="1" stop-color="#FB7185"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="900" rx="44" fill="url(#bg)"/>
+  <circle cx="1030" cy="152" r="186" fill="#FB923C" fill-opacity="0.14"/>
+  <circle cx="180" cy="744" r="210" fill="#F43F5E" fill-opacity="0.1"/>
+  <rect x="180" y="126" width="840" height="648" rx="38" fill="url(#panel)"/>
+  <rect x="180.75" y="126.75" width="838.5" height="646.5" rx="37.25" stroke="#FDBA74" stroke-opacity="0.5" stroke-width="1.5"/>
+  <rect x="222" y="166" width="180" height="568" rx="30" fill="#FFF1E6"/>
+  <rect x="430" y="166" width="548" height="94" rx="26" fill="#FFFFFF"/>
+  <rect x="430" y="286" width="548" height="448" rx="30" fill="#FFFFFF"/>
+  <rect x="248" y="208" width="128" height="18" rx="9" fill="#FDBA74"/>
+  <rect x="248" y="264" width="128" height="48" rx="16" fill="url(#accent)"/>
+  <rect x="248" y="334" width="128" height="48" rx="16" fill="#FFFFFF"/>
+  <rect x="248" y="404" width="128" height="48" rx="16" fill="#FFFFFF"/>
+  <rect x="248" y="474" width="128" height="48" rx="16" fill="#FFFFFF"/>
+  <rect x="248" y="544" width="128" height="48" rx="16" fill="#FFFFFF"/>
+  <rect x="248" y="614" width="128" height="48" rx="16" fill="#FFFFFF"/>
+  <text x="462" y="202" fill="#9A3412" font-family="Inter, Arial, sans-serif" font-size="18">Admin panel UI</text>
+  <text x="462" y="236" fill="#431407" font-family="Inter, Arial, sans-serif" font-size="34" font-weight="700">Team and tasks</text>
+  <rect x="462" y="324" width="230" height="168" rx="24" fill="#FFF7ED"/>
+  <rect x="718" y="324" width="230" height="168" rx="24" fill="#FFF7ED"/>
+  <rect x="462" y="518" width="486" height="178" rx="24" fill="#FFF7ED"/>
+  <text x="490" y="366" fill="#9A3412" font-family="Inter, Arial, sans-serif" font-size="18">Open tasks</text>
+  <text x="490" y="420" fill="#431407" font-family="Inter, Arial, sans-serif" font-size="38" font-weight="700">14</text>
+  <text x="746" y="366" fill="#9A3412" font-family="Inter, Arial, sans-serif" font-size="18">Team online</text>
+  <text x="746" y="420" fill="#431407" font-family="Inter, Arial, sans-serif" font-size="38" font-weight="700">8</text>
+  <rect x="490" y="564" width="430" height="14" rx="7" fill="#FED7AA"/>
+  <rect x="490" y="606" width="356" height="14" rx="7" fill="#FDBA74"/>
+  <rect x="490" y="648" width="388" height="14" rx="7" fill="#FB7185" fill-opacity="0.72"/>
+  <text x="490" y="548" fill="#9A3412" font-family="Inter, Arial, sans-serif" font-size="20" font-weight="600">Task completion status</text>
+</svg>

@@ -190,5 +190,26 @@
             </main>
         </div>
     </div>
+
+    <div class="fixed inset-0 z-[120] hidden items-center justify-center bg-slate-950/60 p-4" data-danger-modal>
+        <div class="w-full max-w-md rounded-[2rem] border border-rose-200 bg-white p-6 shadow-2xl shadow-rose-950/15">
+            <div class="flex items-start gap-4">
+                <span class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-rose-100 text-rose-700">
+                    <i data-lucide="triangle-alert" class="h-5 w-5"></i>
+                </span>
+                <div class="min-w-0">
+                    <h3 class="text-lg font-semibold text-slate-950" data-danger-modal-title>Biznesni o'chirish</h3>
+                    <p class="mt-2 text-sm leading-6 text-slate-600" data-danger-modal-message>Bu amal qaytarilmaydi.</p>
+                    <div class="mt-4 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm leading-6 text-rose-700" data-danger-modal-warning>
+                        Bu amal qaytarilmaydi.
+                    </div>
+                </div>
+            </div>
+            <div class="mt-6 flex justify-end gap-3">
+                <button type="button" class="rounded-2xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-600 transition hover:bg-slate-50" data-danger-cancel>Bekor qilish</button>
+                <button type="button" class="rounded-2xl bg-rose-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-rose-700" data-danger-accept>Ha, o'chirilsin</button>
+            </div>
+        </div>
+    </div>
 </body>
 </html>

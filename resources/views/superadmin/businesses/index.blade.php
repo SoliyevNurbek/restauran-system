@@ -40,8 +40,11 @@
                         <form method="POST" action="{{ route('superadmin.businesses.destroy', $business) }}" class="mt-3">
                             @csrf
                             @method('DELETE')
-                            <button type="submit"
-                                onclick="return confirm('{{ $business->venue_name }} biznesini va unga bog\\'langan barcha ma\\'lumotlarni butunlay o\\'chirishni tasdiqlaysizmi?') && confirm('Bu amal qaytarilmaydi. Baza ichidagi bronlar, mijozlar, to\\'lovlar, foydalanuvchilar va media yozuvlari ham o\\'chadi. Davom etilsinmi?')"
+                            <button type="button"
+                                data-danger-confirm
+                                data-confirm-title="Biznesni o'chirish"
+                                data-confirm-message="{{ $business->venue_name }} biznesini va unga bog'langan barcha ma'lumotlarni butunlay o'chirishni tasdiqlaysizmi?"
+                                data-confirm-warning="Bu amal qaytarilmaydi. Baza ichidagi bronlar, mijozlar, to'lovlar, foydalanuvchilar va media yozuvlari ham o'chadi."
                                 class="w-full rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-700 transition hover:border-rose-300 hover:bg-rose-100">
                                 Biznesni to'liq o'chirish
                             </button>
