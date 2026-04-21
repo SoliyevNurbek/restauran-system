@@ -310,25 +310,18 @@
         padding: 32px 18px; font-family: 'Inter', sans-serif;
     }
     .register-card {
-        width: min(100%, 1120px); display: grid; grid-template-columns: 1fr 1.05fr; overflow: hidden;
+        width: min(100%, 760px); overflow: hidden;
         border-radius: 32px; background: rgba(255,255,255,0.04); box-shadow: 0 40px 80px rgba(0,0,0,0.35);
     }
-    .register-visual {
-        position: relative; background: linear-gradient(160deg, #08150c 0%, #0e2417 48%, #09140d 100%); color: white;
-        padding: 48px; display: flex; flex-direction: column; justify-content: space-between; overflow: hidden;
-    }
-    .register-brand, .register-feature-list, .register-copy { position: relative; z-index: 1; }
     .register-brand { display: flex; align-items: center; gap: 14px; }
     .register-brand-mark {
         width: 60px; height: 60px; border-radius: 22px; background: linear-gradient(135deg, #3d9954, #256836);
         display: flex; align-items: center; justify-content: center; overflow: hidden;
-        box-shadow: 0 18px 36px rgba(61,153,84,0.35); font-weight: 700; border: 1px solid rgba(255,255,255,.14);
+        box-shadow: 0 18px 36px rgba(61,153,84,0.18); font-weight: 700; border: 1px solid rgba(61,153,84,.14);
     }
     .register-brand-mark img { width: 100%; height: 100%; object-fit: cover; }
     .register-brand h1 { font-family: 'Playfair Display', serif; font-size: 1.3rem; margin: 0; }
-    .register-brand p { margin: 4px 0 0; font-size: .78rem; letter-spacing: .12em; text-transform: uppercase; color: rgba(255,255,255,.5); }
-    .register-copy h2 { margin: 18px 0 14px; font-family: 'Playfair Display', serif; font-size: clamp(2rem, 3vw, 3rem); line-height: 1.12; }
-    .register-copy p { margin: 0; max-width: 420px; line-height: 1.75; color: rgba(255,255,255,.68); }
+    .register-brand p { margin: 4px 0 0; font-size: .78rem; letter-spacing: .12em; text-transform: uppercase; color: #6f8478; }
     .register-context-card {
         margin-bottom: 20px; padding: 18px 18px 16px; border-radius: 20px;
         border: 1px solid rgba(61,153,84,.18); background: linear-gradient(180deg, #f6fbf7 0%, #eef5f0 100%);
@@ -348,11 +341,10 @@
     }
     .register-context-item span { display: block; margin-bottom: 4px; font-size: .72rem; color: #6c8378; }
     .register-context-item strong { color: #183b25; font-size: .92rem; }
-    .register-feature-list { display: grid; gap: 12px; margin-top: 34px; }
-    .register-feature { border: 1px solid rgba(255,255,255,.08); background: rgba(255,255,255,.05); border-radius: 18px; padding: 16px 18px; }
-    .register-feature strong { display: block; margin-bottom: 6px; }
-    .register-feature span { font-size: .9rem; color: rgba(255,255,255,.62); }
     .register-form-panel { background: rgba(255,255,255,.98); padding: 38px 32px; }
+    .register-form-header {
+        display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 24px;
+    }
     .register-form-badge {
         display: inline-flex; align-items: center; gap: 8px; border-radius: 999px; border: 1px solid rgba(61,153,84,.18);
         background: rgba(61,153,84,.08); padding: 7px 14px; font-size: .74rem; letter-spacing: .08em; text-transform: uppercase; color: #2f7a45;
@@ -438,11 +430,10 @@
     .register-hint.is-valid { color: #15803d; }
     .register-hint.is-invalid { color: #dc2626; }
     @media (max-width: 960px) {
-        .register-card { grid-template-columns: 1fr; }
-        .register-visual { padding: 32px 24px; }
         .register-form-panel { padding: 32px 22px; }
     }
     @media (max-width: 640px) {
+        .register-form-header { flex-direction: column; align-items: flex-start; }
         .register-grid.two { grid-template-columns: 1fr; }
         .register-context-grid { grid-template-columns: 1fr; }
     }
@@ -450,35 +441,23 @@
 
 <div class="register-shell">
     <div class="register-card">
-        <section class="register-visual">
-            <div class="register-brand">
-                <div class="register-brand-mark">
-                    @if($brandLogo?->url())
-                        <img src="{{ $brandLogo->url() }}" alt="{{ $restaurantName }}">
-                    @else
-                        MR
-                    @endif
-                </div>
-                <div>
-                    <h1>{{ $restaurantName }}</h1>
-                    <p>{{ $t('auth_register_visual_tag', $copy['visual_tag']) }}</p>
-                </div>
-            </div>
-
-            <div class="register-copy">
-                <div class="register-form-badge">{{ $t('auth_register_pending_badge', $copy['pending_badge']) }}</div>
-                <h2>{{ $t('auth_register_visual_heading', $copy['visual_heading']) }}</h2>
-                <p>{{ $t('auth_register_visual_text', $copy['visual_text']) }}</p>
-                <div class="register-feature-list">
-                    <div class="register-feature"><strong>{{ $t('auth_register_feature_trial_title', $copy['feature_trial_title']) }}</strong><span>{{ $t('auth_register_feature_trial_text', $copy['feature_trial_text']) }}</span></div>
-                    <div class="register-feature"><strong>{{ $t('auth_register_feature_setup_title', $copy['feature_setup_title']) }}</strong><span>{{ $t('auth_register_feature_setup_text', $copy['feature_setup_text']) }}</span></div>
-                    <div class="register-feature"><strong>{{ $t('auth_register_feature_demo_title', $copy['feature_demo_title']) }}</strong><span>{{ $t('auth_register_feature_demo_text', $copy['feature_demo_text']) }}</span></div>
-                </div>
-            </div>
-        </section>
-
         <section class="register-form-panel">
-            <div class="register-form-badge">{{ $t('landing_nav_register', $copy['page_title']) }}</div>
+            <div class="register-form-header">
+                <div class="register-brand">
+                    <div class="register-brand-mark">
+                        @if($brandLogo?->url())
+                            <img src="{{ $brandLogo->url() }}" alt="{{ $restaurantName }}">
+                        @else
+                            MR
+                        @endif
+                    </div>
+                    <div>
+                        <h1>{{ $restaurantName }}</h1>
+                        <p>{{ $t('auth_register_visual_tag', $copy['visual_tag']) }}</p>
+                    </div>
+                </div>
+                <div class="register-form-badge">{{ $t('landing_nav_register', $copy['page_title']) }}</div>
+            </div>
             <h2 class="register-form-title">{{ $t('auth_register_heading', $copy['heading']) }}</h2>
             <p class="register-form-sub">{{ $t('auth_register_subtitle', $copy['subtitle']) }}</p>
 
