@@ -19,7 +19,6 @@ $langText = static fn (string $key, string $default) => filled($langPack->get($k
 $loginUrl = Route::has('login') ? route('login', ['lang' => $locale]) : '#';
 $registerUrl = Route::has('register') ? route('register', ['lang' => $locale]) : '#';
 $landingUrl = Route::has('landing') ? route('landing', ['lang' => $locale]) : url('/');
-$demoVideoEmbed = config('services.landing.demo_video_embed');
 
 $formatMoney = static function (float|int|string $amount, string $currency = 'UZS'): string {
     $amount = (float) $amount;
@@ -70,14 +69,6 @@ $content = [
         'secondary' => '7 kun bepul sinov',
         'tertiary' => 'Tizimni ulash',
         'trust' => ['Bronlar markazlashadi', "Kalendar xatosiz ishlaydi", "Rahbar uchun realtime nazorat"],
-        'video' => [
-            'label' => '30 soniyalik product demo',
-            'title' => "30 soniyada tizim qanday ishlashini ko'ring",
-            'text' => "To'yxona egasi, administrator va menejer uchun eng muhim oqimlar bitta qisqa preview ichida.",
-            'duration' => '00:30',
-            'cta' => "Demo ko'rish",
-            'embed' => filled($demoVideoEmbed) ? $demoVideoEmbed : null,
-        ],
     ],
     'stats' => [
         ['120+', 'Faol zallar'],
@@ -405,21 +396,6 @@ $demoFunnelSteps = [
                             </div>
                         </div>
 
-                        <article class="hero-video-card premium-card" data-reveal>
-                            <div class="hero-video-card__visual">
-                                <span class="hero-video-card__duration">{{ $content['hero']['video']['duration'] }}</span>
-                                <button type="button" class="hero-video-card__play" aria-label="{{ $content['hero']['video']['cta'] }}" data-video-modal-open>
-                                    <span></span>
-                                </button>
-                                <div class="hero-video-card__glow" aria-hidden="true"></div>
-                            </div>
-                            <div class="hero-video-card__copy">
-                                <small>{{ $content['hero']['video']['label'] }}</small>
-                                <strong>{{ $content['hero']['video']['title'] }}</strong>
-                                <p>{{ $content['hero']['video']['text'] }}</p>
-                                <button type="button" class="button button--ghost" data-video-modal-open>{{ $content['hero']['video']['cta'] }}</button>
-                            </div>
-                        </article>
                     </div>
 
                     <div class="hero-scene" data-reveal data-parallax-scene>
@@ -1073,55 +1049,6 @@ $demoFunnelSteps = [
         <div class="mobile-cta-bar" aria-label="Mobile quick actions">
             <a href="#contact" class="button button--secondary">Demo</a>
             <a href="{{ $registerUrl }}" class="button button--primary" data-register-link data-entry-point="mobile-bar">Registratsiya</a>
-        </div>
-
-        <div class="video-modal" data-video-modal hidden aria-hidden="true">
-            <div class="video-modal__backdrop" data-video-modal-close></div>
-            <div class="video-modal__dialog premium-card" role="dialog" aria-modal="true" aria-labelledby="demo-video-title">
-                <button type="button" class="video-modal__close" aria-label="Close demo video" data-video-modal-close>&times;</button>
-
-                @if ($content['hero']['video']['embed'])
-                    <div class="video-modal__frame">
-                        <iframe
-                            data-video-embed
-                            title="{{ $content['hero']['video']['title'] }}"
-                            src=""
-                            data-src="{{ $content['hero']['video']['embed'] }}"
-                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                            allowfullscreen
-                        ></iframe>
-                    </div>
-                @else
-                    <div class="video-modal__fallback">
-                        <div class="video-modal__fallback-copy">
-                            <small>Interactive walkthrough</small>
-                            <h3 id="demo-video-title">{{ $content['hero']['video']['title'] }}</h3>
-                            <p>{{ $content['hero']['video']['text'] }}</p>
-                        </div>
-                        <div class="video-modal__timeline">
-                            <article class="video-timeline-card premium-card">
-                                <small>00:08</small>
-                                <strong>Bron va kalendar oqimi</strong>
-                                <p>Band kunlar, zal availability va auto lock jarayoni ko'rsatiladi.</p>
-                            </article>
-                            <article class="video-timeline-card premium-card">
-                                <small>00:16</small>
-                                <strong>CRM + pipeline nazorati</strong>
-                                <p>Lead'dan to'lovgacha bo'lgan jarayon realtime panelda ochiladi.</p>
-                            </article>
-                            <article class="video-timeline-card premium-card">
-                                <small>00:30</small>
-                                <strong>Rahbar dashboard</strong>
-                                <p>Tushum, qarzdorlik va bandlik ko'rsatkichlari bir sahifada yakunlanadi.</p>
-                            </article>
-                        </div>
-                        <div class="video-modal__fallback-actions">
-                            <a href="#contact" class="button button--primary">Live demo so'rash</a>
-                            <a href="{{ $registerUrl }}" class="button button--ghost" data-register-link data-entry-point="video-modal">Registratsiya</a>
-                        </div>
-                    </div>
-                @endif
-            </div>
         </div>
 
         {{-- 3D: hero dashboard stage, floating KPI cards, pseudo-3D product showcase, layered compare panels. --}}

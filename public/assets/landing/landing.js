@@ -2,8 +2,6 @@ const header = document.querySelector('[data-site-header]');
 const mobileToggle = document.querySelector('[data-mobile-toggle]');
 const mobileNav = document.querySelector('[data-mobile-nav]');
 const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-const videoModal = document.querySelector('[data-video-modal]');
-const videoEmbed = document.querySelector('[data-video-embed]');
 const registerLinks = document.querySelectorAll('[data-register-link]');
 const registrationContext = {
     source: 'landing',
@@ -63,42 +61,6 @@ if (mobileToggle && mobileNav) {
         });
     });
 }
-
-const openVideoModal = () => {
-    if (!videoModal) return;
-    videoModal.hidden = false;
-    videoModal.setAttribute('aria-hidden', 'false');
-    document.body.style.overflow = 'hidden';
-
-    if (videoEmbed?.dataset.src) {
-        videoEmbed.src = videoEmbed.dataset.src;
-    }
-};
-
-const closeVideoModal = () => {
-    if (!videoModal) return;
-    videoModal.hidden = true;
-    videoModal.setAttribute('aria-hidden', 'true');
-    document.body.style.overflow = '';
-
-    if (videoEmbed) {
-        videoEmbed.src = '';
-    }
-};
-
-document.querySelectorAll('[data-video-modal-open]').forEach((trigger) => {
-    trigger.addEventListener('click', openVideoModal);
-});
-
-document.querySelectorAll('[data-video-modal-close]').forEach((trigger) => {
-    trigger.addEventListener('click', closeVideoModal);
-});
-
-window.addEventListener('keydown', (event) => {
-    if (event.key === 'Escape') {
-        closeVideoModal();
-    }
-});
 
 const revealItems = document.querySelectorAll('[data-reveal]');
 
