@@ -191,6 +191,7 @@ button, input, select, textarea { font: inherit; }
 }
 .site-nav a:hover { color: var(--text); }
 .site-nav a:hover::after { transform: scaleX(1); }
+.site-nav__mobile-auth { display: none; }
 .mobile-toggle {
     display: none;
     width: 48px;
@@ -1487,6 +1488,12 @@ button, input, select, textarea { font: inherit; }
         box-shadow: var(--shadow-md);
     }
     .site-nav.is-open { display: flex; }
+    .site-nav__mobile-auth {
+        display: block;
+        margin-top: 6px;
+        padding-top: 14px;
+        border-top: 1px solid rgba(180, 255, 236, 0.1);
+    }
     .site-actions { display: none; }
     .mobile-toggle { display: inline-block; }
     .hero-grid { grid-template-columns: 1fr; }

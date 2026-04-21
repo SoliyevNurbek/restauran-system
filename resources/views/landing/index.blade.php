@@ -345,6 +345,7 @@ $demoFunnelSteps = [
                     @foreach ($content['nav'] as $item)
                         <a href="{{ $item['href'] }}">{{ $item['label'] }}</a>
                     @endforeach
+                    <a href="{{ $loginUrl }}" class="site-nav__mobile-auth">{{ $langText('landing_nav_login', 'Kirish') }}</a>
                 </nav>
 
                 <div class="site-actions">
